@@ -1,0 +1,72 @@
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11,11,12,.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar__inner{
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand__mark{
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 30%, var(--brand), rgba(242,230,201,.2));
+  box-shadow: 0 0 0 1px rgba(242,230,201,.22);
+}
+
+.brand__text{ min-width: 0; }
+.brand__name{
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+.brand__sub{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(242,230,201,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+}
+
+.icon-btn:hover{
+  border-color: rgba(242,230,201,.28);
+}
+
+.icon-btn svg{
+  width: 20px;
+  height: 20px;
+  fill: var(--brand);
+  opacity: .9;
+}

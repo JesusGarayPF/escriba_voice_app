@@ -1,0 +1,29 @@
+<header class="topbar">
+  <div class="container topbar__inner">
+    <div class="brand" aria-label="Brand">
+      <div class="brand__mark" aria-hidden="true"></div>
+      <div class="brand__text">
+        <div class="brand__name">{{ brandName }}</div>
+        <div class="brand__sub" *ngIf="subtitle">{{ subtitle }}</div>
+      </div>
+    </div>
+
+    <nav class="actions" aria-label="Top actions">
+      <button class="icon-btn btn-reset kbd-focus" type="button" (click)="profileClick.emit()">
+        <span class="sr-only">Perfil</span>
+        <!-- user icon -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12Zm0 2c-4.2 0-7.6 2.1-7.6 4.8V20h15.2v-1.2C19.6 16.1 16.2 14 12 14Z"/>
+        </svg>
+      </button>
+
+      <button class="icon-btn btn-reset kbd-focus" type="button" (click)="settingsClick.emit()">
+        <span class="sr-only">Ajustes</span>
+        <!-- settings icon -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.5 7.5 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54a7.5 7.5 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.5a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0-.05.94 7.5 7.5 0 0 0 .05.94L2.83 14.5a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.05.7 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54c.58-.24 1.13-.56 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.56ZM12 15.25A3.25 3.25 0 1 1 15.25 12 3.26 3.26 0 0 1 12 15.25Z"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+</header>

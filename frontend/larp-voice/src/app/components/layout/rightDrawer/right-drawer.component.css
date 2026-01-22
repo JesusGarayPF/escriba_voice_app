@@ -1,0 +1,71 @@
+.overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 40;
+}
+
+.drawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 50;
+  transform: translateX(110%);
+  transition: transform 220ms ease;
+  pointer-events: none;
+}
+
+.drawer--open{
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.drawer__panel{
+  height: 100%;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer__header{
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 0 18px;
+  border-bottom: 1px solid rgba(242,230,201,.12);
+}
+
+.drawer__title{
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.close-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.close-btn:hover{
+  border-color: rgba(242,230,201,.28);
+}
+
+.close-btn svg{
+  width: 18px;
+  height: 18px;
+  fill: var(--brand);
+  opacity: .9;
+}
+
+.drawer__body{
+  padding: 16px 18px 22px;
+  overflow: auto;
+}

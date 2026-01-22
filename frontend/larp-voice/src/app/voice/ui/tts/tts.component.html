@@ -1,0 +1,20 @@
+<section class="panel">
+  <div class="panel__header">
+    <h2>Texto a voz</h2>
+    <div class="hint">Convierte texto en audio.</div>
+  </div>
+
+  <div class="box">
+    <label>Texto</label>
+    <textarea rows="4" [(ngModel)]="text" placeholder="Escribe aquí..."></textarea>
+  </div>
+
+  <div class="row">
+    <button class="btn" type="button" (click)="speakText()">Reproducir</button>
+    <span class="status" *ngIf="ttsStatus">{{ ttsStatus }}</span>
+  </div>
+
+  <div class="error" *ngIf="ttsError">{{ ttsError }}</div>
+
+  <audio class="player" *ngIf="ttsAudioUrl" [src]="ttsAudioUrl" controls></audio>
+</section>

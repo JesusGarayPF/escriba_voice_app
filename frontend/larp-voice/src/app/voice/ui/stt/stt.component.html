@@ -1,0 +1,24 @@
+<section class="panel">
+  <div class="panel__header">
+    <h2>Voz a texto</h2>
+    <div class="hint">Graba y transcribe al instante.</div>
+  </div>
+
+  <div class="row">
+    <button class="btn" type="button" (click)="startRecording()" [disabled]="isRecording">
+      Grabar
+    </button>
+
+    <button class="btn btn--ghost" type="button" (click)="stopRecording()" [disabled]="!isRecording">
+      Detener
+    </button>
+
+    <span class="status" *ngIf="sttStatus">{{ sttStatus }}</span>
+  </div>
+
+  <div class="box">
+    <label>Transcripción</label>
+    <textarea rows="4" readonly [value]="transcribedText"></textarea>
+    <div class="error" *ngIf="sttError">{{ sttError }}</div>
+  </div>
+</section>

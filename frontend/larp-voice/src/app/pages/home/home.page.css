@@ -1,0 +1,126 @@
+.main{
+  padding: 18px 0 40px;
+}
+
+.title{
+  font-size: 22px;
+  margin: 10px 0 6px;
+}
+
+.subtitle{
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.launcher{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row{
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px 1fr 24px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(242,230,201,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  text-align: left;
+}
+
+.row:hover{ border-color: rgba(242,230,201,.24); }
+.row:disabled{ opacity: .55; cursor: not-allowed; }
+
+.icon{
+  width: 46px;
+  height: 46px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(0,0,0,.14);
+}
+
+.icon svg{
+  width: 22px;
+  height: 22px;
+  fill: var(--brand);
+  opacity: .95;
+}
+
+.icon--disabled svg{ opacity: .55; }
+
+.text{ min-width: 0; }
+.row-title{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.row-desc{
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.pill{
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(242,230,201,.18);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.chev{
+  color: var(--brand);
+  opacity: .65;
+  font-size: 26px;
+  line-height: 1;
+  text-align: right;
+}
+
+/* Header para la vista voice */
+.voiceHeader{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 16px;
+}
+
+.back{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.back:hover{ border-color: rgba(242,230,201,.28); }
+
+.voiceTitle .title{ margin: 0; }
+.voiceTitle .subtitle{ margin: 2px 0 0; }
+
+.toolHeader{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 16px;
+}
+
+.back{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.back:hover{ border-color: rgba(242,230,201,.28); }
+
+.toolTitle .title{ margin: 0; }
+.toolTitle .subtitle{ margin: 2px 0 0; }

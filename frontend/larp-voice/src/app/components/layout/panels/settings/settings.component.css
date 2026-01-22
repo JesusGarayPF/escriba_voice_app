@@ -1,0 +1,53 @@
+.card{
+  border: 1px solid rgba(242,230,201,.14);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.02);
+  padding: 14px;
+}
+
+.group{
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.10);
+  background: rgba(0,0,0,.10);
+  margin-bottom: 12px;
+}
+
+.label{
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: .2px;
+}
+
+.control{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+}
+
+.control:focus-visible{
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+.toggle{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--text);
+}
+
+.toggle input{
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+}
+
+.note{
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}

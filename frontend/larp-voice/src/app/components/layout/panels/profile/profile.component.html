@@ -1,0 +1,27 @@
+<div class="card">
+  <div class="row">
+    <div class="avatar" aria-hidden="true"></div>
+    <div class="meta">
+      <div class="name">Usuario</div>
+      <div class="sub">Plan: Local / Demo</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <button class="item btn-reset kbd-focus" type="button">
+    Preferencias
+    <span class="hint">Idioma, voz, etc.</span>
+  </button>
+
+  <button class="item btn-reset kbd-focus" type="button">
+    Cuenta
+    <span class="hint">Datos y seguridad</span>
+  </button>
+
+  <div class="divider"></div>
+
+  <button class="danger btn-reset kbd-focus" type="button" (click)="signOut.emit()">
+    Cerrar sesión
+  </button>
+</div>

@@ -1,0 +1,65 @@
+<app-top-nav-bar
+  brandName="Escriba"
+  subtitle="Herramientas"
+  (profileClick)="openProfile()"
+  (settingsClick)="openSettings()"
+></app-top-nav-bar>
+
+<main class="container main">
+  <h1 class="title">Inicio</h1>
+  <p class="subtitle">Elige una herramienta para empezar.</p>
+
+  <section class="launcher" aria-label="Acciones principales">
+    <button
+      *ngFor="let a of actions"
+      class="row btn-reset kbd-focus"
+      type="button"
+      [disabled]="!a.enabled"
+      (click)="a.enabled && go(a.id)"
+    >
+      <div class="icon" [class.icon--disabled]="!a.enabled" aria-hidden="true">
+        <ng-container [ngSwitch]="a.icon">
+          <svg *ngSwitchCase="'mic'" viewBox="0 0 24 24">
+            <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a1 1 0 0 0-2 0 3 3 0 0 1-6 0 1 1 0 0 0-2 0 5 5 0 0 0 4 4.9V19H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-3.1A5 5 0 0 0 17 11Z"/>
+          </svg>
+
+          <svg *ngSwitchCase="'speaker'" viewBox="0 0 24 24">
+            <path d="M5 10v4h3l4 4V6L8 10H5Zm11.5 2a3.5 3.5 0 0 0-2-3.16v6.32a3.5 3.5 0 0 0 2-3.16Zm0-7a1 1 0 0 0-1 1v.4a7 7 0 0 1 0 11.2V18a1 1 0 0 0 2 0v-.4a9 9 0 0 0 0-14.2V6a1 1 0 0 0-1-1Z"/>
+          </svg>
+
+          <svg *ngSwitchCase="'chat'" viewBox="0 0 24 24">
+            <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 5a1 1 0 0 0 0 2h10a1 1 0 0 0 0-2H7Zm0 4a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2H7Z"/>
+          </svg>
+
+          <svg *ngSwitchCase="'spark'" viewBox="0 0 24 24">
+            <path d="M12 2l1.2 4.2L17 8l-3.8 1.8L12 14l-1.2-4.2L7 8l3.8-1.8L12 2Zm7 8l.8 2.8L22 14l-2.2 1.2L19 18l-.8-2.8L16 14l2.2-1.2L19 10ZM5 12l1 3.5L9 17l-3 1.5L5 22l-1-3.5L1 17l3-1.5L5 12Z"/>
+          </svg>
+
+          <svg *ngSwitchCase="'clock'" viewBox="0 0 24 24">
+            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 10.4 3.1 1.8a1 1 0 1 1-1 1.7l-3.6-2.1A1 1 0 0 1 11 13V7a1 1 0 0 1 2 0Z"/>
+          </svg>
+        </ng-container>
+      </div>
+
+      <div class="text">
+        <div class="row-title">
+          {{ a.title }}
+          <span class="pill" *ngIf="!a.enabled">Próximamente</span>
+        </div>
+        <div class="row-desc">{{ a.desc }}</div>
+      </div>
+
+      <div class="chev" aria-hidden="true">›</div>
+    </button>
+  </section>
+</main>
+
+<app-right-drawer
+  [open]="drawerOpen"
+  [title]="drawerTitle"
+  width="420px"
+  (close)="closeDrawer()"
+>
+  <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
+  <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
+</app-right-drawer>

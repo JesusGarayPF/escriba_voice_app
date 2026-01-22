@@ -1,0 +1,86 @@
+.panel{
+  border: 1px solid rgba(242,230,201,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.panel__header{
+  margin-bottom: 12px;
+}
+
+.panel__header h2{
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.hint{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.btn{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn:hover{
+  border-color: rgba(242,230,201,.28);
+}
+
+.btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.btn--ghost{
+  background: rgba(0,0,0,.12);
+}
+
+.status{
+  color: var(--brand);
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.box{
+  border: 1px solid rgba(242,230,201,.10);
+  background: rgba(0,0,0,.10);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+label{
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+textarea{
+  width: 100%;
+  resize: vertical;
+  min-height: 92px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+}
+
+.error{
+  margin-top: 10px;
+  color: #ffb4b4;
+  font-size: 13px;
+}

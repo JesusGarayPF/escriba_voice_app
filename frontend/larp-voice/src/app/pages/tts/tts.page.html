@@ -1,0 +1,28 @@
+<app-top-nav-bar
+  brandName="Escriba"
+  subtitle="Texto a voz"
+  (profileClick)="openProfile()"
+  (settingsClick)="openSettings()"
+></app-top-nav-bar>
+
+<main class="container main">
+  <div class="toolHeader">
+    <button class="back btn-reset kbd-focus" type="button" (click)="back()">← Volver</button>
+    <div class="toolTitle">
+      <div class="title">Texto a voz</div>
+      <div class="subtitle">Panel TTS</div>
+    </div>
+  </div>
+
+  <app-tts></app-tts>
+</main>
+
+<app-right-drawer
+  [open]="drawerOpen"
+  [title]="drawerTitle"
+  width="420px"
+  (close)="closeDrawer()"
+>
+  <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
+  <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
+</app-right-drawer>

@@ -1,0 +1,7 @@
+piper-voices/
+node_modules/
+models/
+bin/
+uploads/
+outputs/
+temp/
