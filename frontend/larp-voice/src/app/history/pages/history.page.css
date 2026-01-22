@@ -1,4 +1,4 @@
-/* === Base (idéntico a STT/TTS) === */
+/* === Base (idéntico a tus otras páginas) === */
 .main{
   padding: 18px 0 40px;
 }
@@ -22,30 +22,56 @@
 .toolTitle .title{ margin: 0; font-size: 22px; }
 .toolTitle .subtitle{ margin: 2px 0 0; color: var(--muted); }
 
-/* === Historial (mínimo necesario) === */
-
-/* Panel contenedor para que no quede “suelo vacío” */
+/* === Tarjeta grande como STT/TTS === */
 .panel{
-  border-radius: 14px;
-  border: 1px solid rgba(242,230,201,.10);
+  border-radius: 16px;
+  border: 1px solid rgba(242,230,201,.12);
   background: rgba(255,255,255,.02);
-  padding: 14px;
+  padding: 16px;
 }
 
-/* Tabs de categorías */
+.panel__header h2{
+  margin: 0;
+  font-size: 18px;
+}
+
+.hint{
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* === Caja interior como STT/TTS === */
+.box{
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(242,230,201,.10);
+  background: rgba(0,0,0,.18);
+}
+
+.box > label{
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* === Tabs como botones === */
 .tabs{
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 14px;
 }
 
+/* IMPORTANTE: btn-reset suele quitar border/background. Aquí los reponemos. */
 .tab{
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(242,230,201,.14);
   background: rgba(255,255,255,.03);
   color: inherit;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .tab:hover{
@@ -57,13 +83,13 @@
   background: rgba(242,230,201,.06);
 }
 
-/* Lista */
+/* === Lista / empty === */
 .list{
-  margin-top: 8px;
+  margin-top: 2px;
 }
 
 .empty{
-  padding: 14px 14px;
+  padding: 12px 12px;
   border-radius: 12px;
   border: 1px dashed rgba(242,230,201,.18);
   color: var(--muted);

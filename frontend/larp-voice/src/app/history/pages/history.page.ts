@@ -8,9 +8,17 @@ import { ProfilePanelComponent } from '../../components/layout/panels/profile/pr
 import { SettingsPanelComponent } from '../../components/layout/panels/settings/settings.component';
 
 type DrawerMode = 'none' | 'profile' | 'settings';
+type HistoryCategory = 'stt' | 'tts' | 'diarization' | 'summaries';
+
+const CATEGORY_LABEL: Record<HistoryCategory, string> = {
+  stt: 'Voz a Texto',
+  tts: 'Texto a Voz',
+  diarization: 'Diarización',
+  summaries: 'Resúmenes',
+};
 
 @Component({
-  selector: 'app-home-page',
+  selector: 'app-history-page',
   standalone: true,
   imports: [
     CommonModule,
@@ -19,59 +27,31 @@ type DrawerMode = 'none' | 'profile' | 'settings';
     ProfilePanelComponent,
     SettingsPanelComponent,
   ],
-  templateUrl: './home.page.html',
-  styleUrl: './home.page.css',
+  templateUrl: './history.page.html',
+  styleUrl: './history.page.css',
 })
-export class HomePage implements OnDestroy {
+export class HistoryPage implements OnDestroy {
   mode: DrawerMode = 'none';
 
-  actions = [
-    {
-      id: 'stt',
-      title: 'Voz a texto',
-      desc: 'Graba y transcribe al instante.',
-      icon: 'mic',
-      enabled: true,
-    },
-    {
-      id: 'tts',
-      title: 'Texto a voz',
-      desc: 'Convierte texto en audio.',
-      icon: 'speaker',
-      enabled: true,
-    },
-    {
-      id: 'conversation',
-      title: 'Conversación',
-      desc: 'Detectar quién habla (próximamente).',
-      icon: 'chat',
-      enabled: false,
-    },
-    {
-      id: 'summarize',
-      title: 'Resumir',
-      desc: 'Resumen rápido o detallado.',
-      icon: 'spark',
-      enabled: false,
-    },
-    {
-      id: 'history',
-      title: 'Historial',
-      desc: 'Sesiones, audios y notas.',
-      icon: 'clock',
-      enabled: true,
-    },
-  ] as const;
+  categories: { id: HistoryCategory; label: string }[] = [
+    { id: 'stt', label: CATEGORY_LABEL.stt },
+    { id: 'tts', label: CATEGORY_LABEL.tts },
+    { id: 'diarization', label: CATEGORY_LABEL.diarization },
+    { id: 'summaries', label: CATEGORY_LABEL.summaries },
+  ];
+
+  selected: HistoryCategory = 'stt';
 
   constructor(
     private router: Router,
     private r2: Renderer2
-  ) { }
+  ) {}
 
   ngOnDestroy(): void {
     this.unlockScroll();
   }
 
+  // --- Topbar actions (drawer) ---
   openProfile() {
     this.mode = this.mode === 'profile' ? 'none' : 'profile';
     this.syncScrollLock();
@@ -87,15 +67,6 @@ export class HomePage implements OnDestroy {
     this.syncScrollLock();
   }
 
-  go(actionId: string) {
-    if (actionId === 'stt') this.router.navigateByUrl('/stt');
-    if (actionId === 'tts') this.router.navigateByUrl('/tts');
-    if (actionId === 'history') {
-      this.router.navigateByUrl('/history');
-      return;
-    }
-  }
-
   get drawerOpen() {
     return this.mode !== 'none';
   }
@@ -104,10 +75,25 @@ export class HomePage implements OnDestroy {
     return this.mode === 'profile'
       ? 'Perfil'
       : this.mode === 'settings'
-        ? 'Configuración'
-        : '';
+      ? 'Configuración'
+      : '';
   }
 
+  // --- Page navigation ---
+  back() {
+    this.router.navigateByUrl('/');
+  }
+
+  // --- History category selection ---
+  select(cat: HistoryCategory) {
+    this.selected = cat;
+  }
+
+  get headerTitle(): string {
+    return CATEGORY_LABEL[this.selected];
+  }
+
+  // --- Scroll lock helpers ---
   private syncScrollLock() {
     if (this.drawerOpen) this.lockScroll();
     else this.unlockScroll();

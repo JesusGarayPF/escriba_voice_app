@@ -7,8 +7,9 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 
-import { VOICE_ENGINE } from './voice/contracts/voice-engine.token';
-import { HttpVoiceEngine } from './voice/adapters/http-voice-engine.service';
+// History store DI
+import { HISTORY_STORE } from './history/contracts/history-store.token';
+import { IndexedDbHistoryStore } from './history/stores/indexeddb-history.store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
 
-    // 🔑 Motor de voz activo (HTTP local)
-    { provide: VOICE_ENGINE, useClass: HttpVoiceEngine },
+    // ✅ persistencia desacoplable: en wrapper cambias esto por NativeFsHistoryStore
+    { provide: HISTORY_STORE, useExisting: IndexedDbHistoryStore },
   ],
 };

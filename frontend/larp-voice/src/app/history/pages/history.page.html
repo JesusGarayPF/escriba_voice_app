@@ -1,0 +1,63 @@
+<app-top-nav-bar
+  brandName="Escriba"
+  subtitle="Historial"
+  (profileClick)="openProfile()"
+  (settingsClick)="openSettings()"
+></app-top-nav-bar>
+
+<main class="container main">
+  <div class="toolHeader">
+    <button class="back btn-reset kbd-focus" type="button" (click)="back()">← Volver</button>
+
+    <div class="toolTitle">
+      <div class="title">{{ headerTitle }}</div>
+      <div class="subtitle">Historial de outputs</div>
+    </div>
+  </div>
+
+  <!-- Tarjeta grande (como STT/TTS) -->
+  <section class="panel">
+    <div class="panel__header">
+      <h2>{{ headerTitle }}</h2>
+      <div class="hint">Selecciona una categoría para ver sus outputs.</div>
+    </div>
+
+    <!-- Caja interior (como las box de STT/TTS) -->
+    <div class="box">
+      <label>Categorías</label>
+
+      <nav class="tabs" aria-label="Categorías de historial">
+        <button
+          *ngFor="let c of categories"
+          type="button"
+          class="tab btn-reset kbd-focus"
+          [class.tab--active]="c.id === selected"
+          (click)="select(c.id)"
+        >
+          {{ c.label }}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Caja interior para lista -->
+    <div class="box">
+      <label>Outputs</label>
+
+      <section class="list" aria-label="Lista de outputs">
+        <div class="empty">
+          Aún no hay registros en “{{ headerTitle }}”.
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<app-right-drawer
+  [open]="drawerOpen"
+  [title]="drawerTitle"
+  width="420px"
+  (close)="closeDrawer()"
+>
+  <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
+  <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
+</app-right-drawer>

@@ -6,7 +6,8 @@
 
   <div class="box">
     <label>Texto</label>
-    <textarea rows="4" [(ngModel)]="text" placeholder="Escribe aquí..."></textarea>
+    <textarea rows="4" [(ngModel)]="text" (ngModelChange)="session.setString('tts.lastText', $event)"
+      placeholder="Escribe aquí..."></textarea>
   </div>
 
   <div class="row">

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 
 import { VOICE_ENGINE } from '../../contracts/voice-engine.token';
 import { VoiceEngine } from '../../contracts/voice-engine';
+import { SessionStateService } from '../../../shared/storage/session-state.service';
+
 
 @Component({
   selector: 'app-stt',
@@ -24,8 +26,11 @@ export class SttComponent implements OnDestroy {
 
   constructor(
     @Inject(VOICE_ENGINE) private engine: VoiceEngine,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private session: SessionStateService
+  ) {
+    this.transcribedText = this.session.getString('stt.lastText', '');
+  }
 
   async startRecording(): Promise<void> {
     this.clearSttUi();
@@ -79,6 +84,7 @@ export class SttComponent implements OnDestroy {
       const text = (result?.text ?? '').trim();
 
       this.transcribedText = text || '(vacío)';
+      this.session.setString('stt.lastText', this.transcribedText); // ✅ AQUÍ
       this.sttStatus = '';
       this.cdr.detectChanges();
     } catch (e) {
