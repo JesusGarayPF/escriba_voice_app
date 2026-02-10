@@ -54,6 +54,7 @@
 .icon--disabled svg{ opacity: .55; }
 
 .text{ min-width: 0; }
+
 .row-title{
   display: flex;
   align-items: center;
@@ -85,42 +86,3 @@
   line-height: 1;
   text-align: right;
 }
-
-/* Header para la vista voice */
-.voiceHeader{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 6px 0 16px;
-}
-
-.back{
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(242,230,201,.14);
-  background: rgba(255,255,255,.03);
-}
-
-.back:hover{ border-color: rgba(242,230,201,.28); }
-
-.voiceTitle .title{ margin: 0; }
-.voiceTitle .subtitle{ margin: 2px 0 0; }
-
-.toolHeader{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 6px 0 16px;
-}
-
-.back{
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(242,230,201,.14);
-  background: rgba(255,255,255,.03);
-}
-
-.back:hover{ border-color: rgba(242,230,201,.28); }
-
-.toolTitle .title{ margin: 0; }
-.toolTitle .subtitle{ margin: 2px 0 0; }

@@ -11,6 +11,9 @@ import { routes } from './app.routes';
 import { HISTORY_STORE } from './history/contracts/history-store.token';
 import { IndexedDbHistoryStore } from './history/stores/indexeddb-history.store';
 
+// ✅ Voice engine DI
+import { VOICE_ENGINE } from './voice/contracts/voice-engine.token';
+import { HttpVoiceEngine } from './voice/adapters/http-voice-engine.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -18,7 +21,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
 
-    // ✅ persistencia desacoplable: en wrapper cambias esto por NativeFsHistoryStore
+    // History
     { provide: HISTORY_STORE, useExisting: IndexedDbHistoryStore },
+
+    // ✅ Voice (mismo patrón: implementación swappeable sin refactor)
+    HttpVoiceEngine,
+    { provide: VOICE_ENGINE, useExisting: HttpVoiceEngine },
   ],
 };

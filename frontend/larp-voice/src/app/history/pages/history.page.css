@@ -94,3 +94,93 @@
   border: 1px dashed rgba(242,230,201,.18);
   color: var(--muted);
 }
+.actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.danger{
+  border-color: rgba(255, 120, 120, .22);
+  background: rgba(255, 120, 120, .06);
+}
+
+.danger:hover{
+  border-color: rgba(255, 120, 120, .35);
+}
+.bulletList{
+  margin: 10px 0 0;
+  padding-left: 18px; /* bullets */
+}
+
+.bulletRow{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(242,230,201,.10);
+}
+
+.left{ min-width: 0; flex: 1; }
+
+.nameLine{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.name{
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.nameInput{
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+}
+
+.metaLine{
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dot{ opacity: .7; }
+
+.right{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.iconBtn{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+  display: grid;
+  place-items: center;
+}
+
+.iconBtn:hover{
+  border-color: rgba(242,230,201,.28);
+}
+
+.iconBtn.danger{
+  border-color: rgba(255, 120, 120, .22);
+  background: rgba(255, 120, 120, .06);
+}

@@ -1,3 +1,28 @@
+/* Layout tipo page (como stt.page.css) */
+.main{
+  padding: 18px 0 40px;
+}
+
+.toolHeader{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 16px;
+}
+
+.back{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.back:hover{ border-color: rgba(242,230,201,.28); }
+
+.toolTitle .title{ margin: 0; font-size: 22px; }
+.toolTitle .subtitle{ margin: 2px 0 0; color: var(--muted); }
+
+/* UI STT (la que ya tenías) */
 .panel{
   border: 1px solid rgba(242,230,201,.12);
   background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));

@@ -1,4 +1,28 @@
-/* mismo look que STT para consistencia */
+/* Layout tipo page (como tts.page.css) */
+.main{
+  padding: 18px 0 40px;
+}
+
+.toolHeader{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 16px;
+}
+
+.back{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.14);
+  background: rgba(255,255,255,.03);
+}
+
+.back:hover{ border-color: rgba(242,230,201,.28); }
+
+.toolTitle .title{ margin: 0; font-size: 22px; }
+.toolTitle .subtitle{ margin: 2px 0 0; color: var(--muted); }
+
+/* UI TTS (alineada con STT) */
 .panel{
   border: 1px solid rgba(242,230,201,.12);
   background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
@@ -20,38 +44,12 @@
   font-size: 13px;
 }
 
-.row{
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.btn{
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(242,230,201,.16);
-  background: rgba(255,255,255,.03);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.btn:hover{
-  border-color: rgba(242,230,201,.28);
-}
-
-.status{
-  color: var(--brand);
-  font-size: 13px;
-  margin-left: auto;
-}
-
 .box{
   border: 1px solid rgba(242,230,201,.10);
   background: rgba(0,0,0,.10);
   border-radius: 12px;
   padding: 12px;
+  margin-bottom: 12px;
 }
 
 label{
@@ -71,6 +69,38 @@ textarea{
   color: var(--text);
 }
 
+.row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.btn{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(242,230,201,.16);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn:hover{
+  border-color: rgba(242,230,201,.28);
+}
+
+.btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.status{
+  color: var(--brand);
+  font-size: 13px;
+  margin-left: auto;
+}
+
 .error{
   margin-top: 10px;
   color: #ffb4b4;
@@ -79,6 +109,5 @@ textarea{
 
 .player{
   width: 100%;
-  margin-top: 12px;
-  border-radius: 12px;
+  margin-top: 10px;
 }

@@ -15,6 +15,62 @@ export class IndexedDbHistoryStore implements HistoryStore {
     this.dbp = this.openDb();
   }
 
+  async clearCategory(category: HistoryItemModel['category']): Promise<number> {
+    const db = await this.dbp;
+
+    return new Promise<number>((resolve, reject) => {
+      const tx = db.transaction(['items', 'audio'], 'readwrite');
+      const itemsStore = tx.objectStore('items');
+      const audioStore = tx.objectStore('audio');
+
+      const idx = itemsStore.index('byCategoryCreatedAt');
+      const range = IDBKeyRange.bound([category, 0], [category, Number.MAX_SAFE_INTEGER]);
+
+      let deleted = 0;
+
+      const req = idx.openCursor(range);
+      req.onerror = () => reject(req.error);
+
+      req.onsuccess = () => {
+        const cursor = req.result as IDBCursorWithValue | null;
+        if (!cursor) return; // terminará por tx.oncomplete
+
+        const item = cursor.value as HistoryItemModel;
+
+        // borrar item
+        itemsStore.delete(cursor.primaryKey);
+
+        // borrar audio asociado (si no hay, no pasa nada)
+        const audioId = item.audioId ?? item.id;
+        audioStore.delete(audioId);
+
+        deleted++;
+        cursor.continue();
+      };
+
+      tx.oncomplete = () => resolve(deleted);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  }
+
+  async clearAll(): Promise<void> {
+    const db = await this.dbp;
+
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(['items', 'audio'], 'readwrite');
+      const itemsStore = tx.objectStore('items');
+      const audioStore = tx.objectStore('audio');
+
+      itemsStore.clear();
+      audioStore.clear();
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  }
+
   async upsertItem(item: HistoryItemModel): Promise<void> {
     const db = await this.dbp;
     await this.tx(db, 'items', 'readwrite', store => store.put(item));

@@ -1,9 +1,5 @@
-<app-top-nav-bar
-  brandName="Escriba"
-  subtitle="Historial"
-  (profileClick)="openProfile()"
-  (settingsClick)="openSettings()"
-></app-top-nav-bar>
+<app-top-nav-bar brandName="Escriba" subtitle="Historial" (profileClick)="openProfile()"
+  (settingsClick)="openSettings()"></app-top-nav-bar>
 
 <main class="container main">
   <div class="toolHeader">
@@ -27,13 +23,8 @@
       <label>Categorías</label>
 
       <nav class="tabs" aria-label="Categorías de historial">
-        <button
-          *ngFor="let c of categories"
-          type="button"
-          class="tab btn-reset kbd-focus"
-          [class.tab--active]="c.id === selected"
-          (click)="select(c.id)"
-        >
+        <button *ngFor="let c of categories" type="button" class="tab btn-reset kbd-focus"
+          [class.tab--active]="c.id === selected" (click)="select(c.id)">
           {{ c.label }}
         </button>
       </nav>
@@ -43,21 +34,72 @@
     <div class="box">
       <label>Outputs</label>
 
+
       <section class="list" aria-label="Lista de outputs">
-        <div class="empty">
+        <div class="empty" *ngIf="!loading && items.length === 0">
           Aún no hay registros en “{{ headerTitle }}”.
         </div>
+
+        <div class="empty" *ngIf="loading">Cargando…</div>
+        <div class="empty" *ngIf="!loading && errorMsg">{{ errorMsg }}</div>
+
+        <ul class="bulletList" *ngIf="!loading && items.length > 0">
+          <li class="bulletRow" *ngFor="let it of items">
+            <div class="left">
+              <!-- Nombre + editar -->
+              <div class="nameLine">
+                <ng-container *ngIf="editingId !== it.id; else editTpl">
+                  <span class="name">{{ displayName(it) }}</span>
+                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Renombrar" (click)="startRename(it)">
+                    ✎
+                  </button>
+                </ng-container>
+
+                <ng-template #editTpl>
+                  <input class="nameInput kbd-focus" type="text" [value]="draftName"
+                    (input)="draftName = ($any($event.target).value ?? '')" (keydown.enter)="saveRename(it)"
+                    (keydown.escape)="cancelRename()" />
+                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Guardar" (click)="saveRename(it)">
+                    ✓
+                  </button>
+                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Cancelar" (click)="cancelRename()">
+                    ✕
+                  </button>
+                </ng-template>
+              </div>
+
+              <!-- Metadatos -->
+              <div class="metaLine">
+                <span class="meta">{{ it.createdAt | date:'short' }}</span>
+                <span class="dot">•</span>
+                <span class="meta">{{ formatDuration(it.durationMs) }}</span>
+                <span class="dot">•</span>
+                <span class="meta">{{ formatBytes(it.sizeBytes) }}</span>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="right">
+              <button class="iconBtn btn-reset kbd-focus" type="button" title="Descargar" (click)="download(it)">
+                ⬇
+              </button>
+
+              <button class="iconBtn btn-reset kbd-focus" type="button" title="Compartir" (click)="share(it)">
+                ⤴
+              </button>
+
+              <button class="iconBtn danger btn-reset kbd-focus" type="button" title="Borrar" (click)="deleteOne(it)">
+                🗑
+              </button>
+            </div>
+          </li>
+        </ul>
       </section>
     </div>
   </section>
 </main>
 
-<app-right-drawer
-  [open]="drawerOpen"
-  [title]="drawerTitle"
-  width="420px"
-  (close)="closeDrawer()"
->
+<app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">
   <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
   <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
 </app-right-drawer>

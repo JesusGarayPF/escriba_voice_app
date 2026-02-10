@@ -9,6 +9,53 @@ import { SettingsPanelComponent } from '../../components/layout/panels/settings/
 
 type DrawerMode = 'none' | 'profile' | 'settings';
 
+const ACTIONS = [
+  {
+    id: 'stt',
+    title: 'Voz a texto',
+    desc: 'Graba y transcribe al instante.',
+    icon: 'mic',
+    enabled: true,
+  },
+  {
+    id: 'tts',
+    title: 'Texto a voz',
+    desc: 'Convierte texto en audio.',
+    icon: 'speaker',
+    enabled: true,
+  },
+  {
+    id: 'conversation',
+    title: 'Conversación',
+    desc: 'Detectar quién habla (host/participante).',
+    icon: 'chat',
+    enabled: true,
+  },
+  {
+    id: 'summarize',
+    title: 'Resumir',
+    desc: 'Resumen rápido o detallado.',
+    icon: 'spark',
+    enabled: false,
+  },
+  {
+    id: 'history',
+    title: 'Historial',
+    desc: 'Sesiones, audios y notas.',
+    icon: 'clock',
+    enabled: true,
+  },
+] as const;
+
+type ActionId = (typeof ACTIONS)[number]['id'];
+
+const ROUTE_BY_ACTION: Partial<Record<ActionId, string>> = {
+  stt: '/stt',
+  tts: '/tts',
+  history: '/history',
+  conversation: '/conversation',
+};
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -24,44 +71,7 @@ type DrawerMode = 'none' | 'profile' | 'settings';
 })
 export class HomePage implements OnDestroy {
   mode: DrawerMode = 'none';
-
-  actions = [
-    {
-      id: 'stt',
-      title: 'Voz a texto',
-      desc: 'Graba y transcribe al instante.',
-      icon: 'mic',
-      enabled: true,
-    },
-    {
-      id: 'tts',
-      title: 'Texto a voz',
-      desc: 'Convierte texto en audio.',
-      icon: 'speaker',
-      enabled: true,
-    },
-    {
-      id: 'conversation',
-      title: 'Conversación',
-      desc: 'Detectar quién habla (próximamente).',
-      icon: 'chat',
-      enabled: false,
-    },
-    {
-      id: 'summarize',
-      title: 'Resumir',
-      desc: 'Resumen rápido o detallado.',
-      icon: 'spark',
-      enabled: false,
-    },
-    {
-      id: 'history',
-      title: 'Historial',
-      desc: 'Sesiones, audios y notas.',
-      icon: 'clock',
-      enabled: true,
-    },
-  ] as const;
+  actions = ACTIONS;
 
   constructor(
     private router: Router,
@@ -72,6 +82,7 @@ export class HomePage implements OnDestroy {
     this.unlockScroll();
   }
 
+  // --- Topbar actions (drawer) ---
   openProfile() {
     this.mode = this.mode === 'profile' ? 'none' : 'profile';
     this.syncScrollLock();
@@ -87,15 +98,6 @@ export class HomePage implements OnDestroy {
     this.syncScrollLock();
   }
 
-  go(actionId: string) {
-    if (actionId === 'stt') this.router.navigateByUrl('/stt');
-    if (actionId === 'tts') this.router.navigateByUrl('/tts');
-    if (actionId === 'history') {
-      this.router.navigateByUrl('/history');
-      return;
-    }
-  }
-
   get drawerOpen() {
     return this.mode !== 'none';
   }
@@ -108,6 +110,19 @@ export class HomePage implements OnDestroy {
         : '';
   }
 
+  // --- Navigation ---
+  go(actionId: ActionId) {
+    const route = ROUTE_BY_ACTION[actionId];
+    if (!route) return; // acciones "próximamente" o sin ruta
+
+    // Cierra drawer (por si estuviera abierto) y navega
+    this.mode = 'none';
+    this.syncScrollLock();
+
+    void this.router.navigateByUrl(route);
+  }
+
+  // --- Scroll lock helpers ---
   private syncScrollLock() {
     if (this.drawerOpen) this.lockScroll();
     else this.unlockScroll();

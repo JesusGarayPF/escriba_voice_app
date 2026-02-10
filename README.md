@@ -48,17 +48,18 @@ test.wav # Archivo de prueba
 
 ## ⚙ Instalación rápida
 
-   Requiere Node.js 18 o superior (recomendado LTS)
-
 1. Clonar el repositorio
-2. Instalar dependencias del frontend (`npm install`)
+2. Instalar dependencias del frontend:
     cd frontend/larp-voice
     npm install
     npm run start
-3. Instalar dependencias del backend
+3. Instalar dependencias del backend: 
     # en otra terminal
     cd ../../backend
     npm install
     npm run dev
 4. Descargar modelos Whisper y voces Piper
 5. Colocar binarios de Whisper y Piper en `bin/`
+6. Instalar ffmpeg:
+    winget install Gyan.FFmpeg
+

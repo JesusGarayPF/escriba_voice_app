@@ -1,0 +1,26 @@
+<div class="overlay" *ngIf="open" (click)="onBackdropClick()">
+  <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="header">
+      <div class="title">{{ title }}</div>
+    </div>
+
+    <div class="body">
+      <div class="text">{{ text }}</div>
+    </div>
+
+    <div class="footer">
+      <button class="btn btn-reset kbd-focus" type="button" (click)="onCancel()">
+        {{ cancelText }}
+      </button>
+
+      <button
+        class="btn btn-reset kbd-focus"
+        type="button"
+        [class.danger]="variant === 'danger'"
+        (click)="onConfirm()"
+      >
+        {{ confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

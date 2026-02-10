@@ -1,0 +1,56 @@
+.overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.modal{
+  width: min(520px, calc(100vw - 32px));
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(18,18,18,.96);
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+  padding: 16px;
+}
+
+.header .title{
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.body .text{
+  opacity: .92;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.footer{
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.btn{
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+}
+
+.btn:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.danger{
+  border-color: rgba(255, 120, 120, .22);
+  background: rgba(255, 120, 120, .08);
+}
+
+.danger:hover{
+  background: rgba(255, 120, 120, .12);
+}

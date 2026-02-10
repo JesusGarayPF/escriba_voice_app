@@ -1,0 +1,121 @@
+<app-top-nav-bar brandName="Escriba" subtitle="Diarización" (profileClick)="openProfile()"
+    (settingsClick)="openSettings()">
+</app-top-nav-bar>
+
+<main class="container main">
+    <!-- Header de herramienta -->
+    <div class="toolHeader">
+        <button class="back btn-reset kbd-focus" type="button" (click)="back()">
+            ← Volver
+        </button>
+        <div class="toolTitle">
+            <div class="title">Conversación</div>
+            <div class="subtitle">Sala multi-hablante</div>
+        </div>
+    </div>
+
+    <!-- PANEL: INICIO -->
+    <section class="panel" *ngIf="session.status() === 'disconnected' || session.status() === 'error'">
+        <div class="panel__header">
+            <h2>Iniciar Sesión</h2>
+            <div class="hint">Elige cómo quieres participar en la conversación.</div>
+        </div>
+
+        <div class="actions-grid">
+            <!-- Columna HOST -->
+            <div class="action-col">
+                <h3>Crear Sala</h3>
+                <p>Actúa como anfitrión (Host).<br>Tu dispositivo procesará el audio.</p>
+                <button class="btn btn-primary" (click)="createSession()">
+                    Nueva Sala
+                </button>
+            </div>
+
+            <div class="divider-v"></div>
+
+            <!-- Columna PARTICIPANTE -->
+            <div class="action-col">
+                <h3>Unirse a Sala</h3>
+                <p>Conéctate a una sala existente<br>usando su código.</p>
+
+                <div class="form-group">
+                    <label>Tu Nombre</label>
+                    <input type="text" [(ngModel)]="myNick" placeholder="Ej. Juan" />
+                </div>
+
+                <div class="form-group">
+                    <label>Código de Sala</label>
+                    <input type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######" maxlength="6" />
+                </div>
+
+                <button class="btn" [disabled]="joinCode.length !== 6 || isJoining" (click)="joinSession()">
+                    {{ isJoining ? 'Conectando...' : 'Unirse' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Error message -->
+        <div class="box" style="margin-top: 20px; border-color: #ff4d4f; background: rgba(255,77,79,0.1);"
+            *ngIf="session.status() === 'error'">
+            <div style="color: #ff4d4f; font-weight: bold; text-align: center;">
+                ⚠ Error: {{ session.error() }}
+            </div>
+        </div>
+    </section>
+
+    <!-- PANEL: LOBBY -->
+    <section class="panel" *ngIf="session.status() === 'connected'">
+        <div class="panel__header">
+            <div class="session-info">
+                <span class="role-badge" [class.host]="session.isHost()">{{ session.isHost() ? 'ANFITRIÓN' : 'INVITADO'
+                    }}</span>
+                <div class="hint" *ngIf="session.isHost()">Comparte este código con los demás:</div>
+                <div class="session-code">{{ session.sessionId() }}</div>
+                <div class="hint" *ngIf="!session.isHost()">Conectado a la sala. Esperando al anfitrión.</div>
+            </div>
+        </div>
+
+        <div class="box">
+            <label>Participantes ({{ session.participants().length + 1 }})</label>
+            <ul class="participants-list">
+                <!-- Yo -->
+                <li class="p-item me">
+                    <div class="p-avatar">Yo</div>
+                    <div class="p-info">
+                        <span class="p-name">{{ myNick }} {{ session.isHost() ? '(Host)' : '' }}</span>
+                        <span class="p-status">● Online</span>
+                    </div>
+                </li>
+                <!-- Otros -->
+                <li class="p-item" *ngFor="let p of session.participants()">
+                    <div class="p-avatar">{{ p.name.charAt(0) }}</div>
+                    <div class="p-info">
+                        <span class="p-name">{{ p.name }}</span>
+                        <span class="p-status">● Conectado</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="controls-bar">
+            <button class="btn btn-danger" (click)="leave()">Abandonar Sala</button>
+
+            <!-- Futura acción Fase 2 -->
+            <button class="btn btn-primary" *ngIf="session.isHost()" disabled title="Próximamente en Fase 2">
+                ● Iniciar Grabación
+            </button>
+        </div>
+    </section>
+
+    <!-- Overlay de carga -->
+    <div class="loading-overlay" *ngIf="session.status() === 'connecting'">
+        <div class="spinner"></div>
+        <h3>Conectando...</h3>
+        <p>Estableciendo conexión segura P2P</p>
+    </div>
+</main>
+
+<app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">
+    <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
+    <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
+</app-right-drawer>

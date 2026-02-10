@@ -28,4 +28,10 @@ export interface HistoryStore {
 
   /** Borrar audio asociado a un id */
   deleteAudio(id: string): Promise<void>;
+
+  /** Vaciar una categoría (items + audios asociados) */
+  clearCategory(category: HistoryCategory): Promise<number>;
+
+  /** Vaciar todo (todas las categorías + audios) */
+  clearAll(): Promise<void>;
 }

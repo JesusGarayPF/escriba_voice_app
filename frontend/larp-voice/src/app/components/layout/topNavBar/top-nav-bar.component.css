@@ -8,7 +8,8 @@
 }
 
 .topbar__inner{
-  height: 64px;
+  padding: 25px 0;            
+  min-height: 64px;            
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,22 +24,26 @@
 }
 
 .brand__mark{
-  width: 34px;
-  height: 34px;
+  width: 36px;                 
+  height: 36px;
   border-radius: 12px;
   background: radial-gradient(circle at 30% 30%, var(--brand), rgba(242,230,201,.2));
   box-shadow: 0 0 0 1px rgba(242,230,201,.22);
 }
 
 .brand__text{ min-width: 0; }
+
 .brand__name{
   font-weight: 700;
   letter-spacing: .4px;
+  font-size: 20px;             
+  line-height: 1.1;
 }
+
 .brand__sub{
-  font-size: 12px;
+  font-size: 13px;             
   color: var(--muted);
-  margin-top: 2px;
+  margin-top: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -51,8 +56,8 @@
 }
 
 .icon-btn{
-  width: 40px;
-  height: 40px;
+  width: 42px;                 
+  height: 42px;
   border-radius: 12px;
   display: grid;
   place-items: center;
