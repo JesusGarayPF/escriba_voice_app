@@ -45,7 +45,13 @@
 
                 <div class="form-group">
                     <label>Código de Sala</label>
-                    <input type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######" maxlength="6" />
+                    <div class="input-with-action">
+                        <input #joinInput type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######"
+                            maxlength="6" />
+                        <button class="btn-icon" (click)="pasteCode()" title="Pegar del portapapeles">
+                            📋
+                        </button>
+                    </div>
                 </div>
 
                 <button class="btn" [disabled]="joinCode.length !== 6 || isJoining" (click)="joinSession()">
@@ -67,10 +73,21 @@
     <section class="panel" *ngIf="session.status() === 'connected'">
         <div class="panel__header">
             <div class="session-info">
-                <span class="role-badge" [class.host]="session.isHost()">{{ session.isHost() ? 'ANFITRIÓN' : 'INVITADO'
-                    }}</span>
+                <div class="badges">
+                    <span class="role-badge" [class.host]="session.isHost()">
+                        {{ session.isHost() ? 'ANFITRIÓN' : 'INVITADO' }}
+                    </span>
+                    <span class="rec-badge" *ngIf="audio.isRecording()">🔴 GRABANDO</span>
+                </div>
+
                 <div class="hint" *ngIf="session.isHost()">Comparte este código con los demás:</div>
-                <div class="session-code">{{ session.sessionId() }}</div>
+                <div class="code-container" *ngIf="session.isHost()">
+                    <div class="session-code">{{ session.sessionId() }}</div>
+                    <button class="btn-icon" type="button" (click)="copyCode()" title="Copiar código">
+                        📋
+                    </button>
+                </div>
+                <!-- Mostrar código también si soy invitado para verlo? No, el diseño original no lo tenía, pero es útil. -->
                 <div class="hint" *ngIf="!session.isHost()">Conectado a la sala. Esperando al anfitrión.</div>
             </div>
         </div>
@@ -98,12 +115,27 @@
         </div>
 
         <div class="controls-bar">
-            <button class="btn btn-danger" (click)="leave()">Abandonar Sala</button>
-
-            <!-- Futura acción Fase 2 -->
-            <button class="btn btn-primary" *ngIf="session.isHost()" disabled title="Próximamente en Fase 2">
-                ● Iniciar Grabación
+            <button class="btn btn-danger" (click)="leave()" [disabled]="audio.isRecording()">
+                Abandonar Sala
             </button>
+
+            <!-- Acción Host: Procesar -->
+            <button class="btn btn-primary"
+                *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length > 0"
+                (click)="finishAndProcess()" [disabled]="isProcessing">
+                💾 Procesar y Guardar
+            </button>
+
+            <!-- Acción Host: Grabar -->
+            <button class="btn btn-primary" *ngIf="session.isHost()" (click)="toggleRecording()"
+                [class.recording]="audio.isRecording()" [disabled]="isProcessing">
+                {{ audio.isRecording() ? '■ Detener Grabación' : '● Iniciar Grabación' }}
+            </button>
+
+            <!-- Estado Participante -->
+            <div *ngIf="!session.isHost() && audio.isRecording()" class="recording-status">
+                Grabando audio...
+            </div>
         </div>
     </section>
 
@@ -112,6 +144,28 @@
         <div class="spinner"></div>
         <h3>Conectando...</h3>
         <p>Estableciendo conexión segura P2P</p>
+    </div>
+
+    <div class="loading-overlay" *ngIf="isProcessing">
+        <div class="spinner"></div>
+        <h3>Procesando...</h3>
+        <p>Transcribiendo y combinando audios.</p>
+        <p class="hint">Esto puede tardar unos minutos.</p>
+    </div>
+
+    <!-- Modal de Éxito Personalizado -->
+    <div class="overlay" *ngIf="showSuccessModal">
+        <div class="modal success-modal">
+            <div class="header">
+                <div class="title">✅ Guardado Exitoso</div>
+            </div>
+            <div class="body">
+                <div class="text">La conversación se ha procesado y guardado correctamente en tu historial.</div>
+            </div>
+            <div class="footer">
+                <button class="btn btn-primary" (click)="goToHistory()">Ver en Historial</button>
+            </div>
+        </div>
     </div>
 </main>
 

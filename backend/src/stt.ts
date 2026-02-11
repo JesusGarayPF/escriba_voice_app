@@ -14,7 +14,7 @@ const whisperModel = path.resolve(__dirname, '../../models/whisper/ggml-base.bin
 
 const ffmpegBin = 'ffmpeg';
 
-fs.mkdir(uploadsDir, { recursive: true }).catch(() => {});
+fs.mkdir(uploadsDir, { recursive: true }).catch(() => { });
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -73,7 +73,8 @@ router.post('/', upload.single('audio'), async (req, res) => {
 
   let inputPath: string | undefined;
   let wavPath: string | undefined;
-  let txtPath: string | undefined;
+  let txtBase: string | undefined;
+  let outPath: string | undefined;
 
   const t0 = Date.now();
 
@@ -87,12 +88,16 @@ router.post('/', upload.single('audio'), async (req, res) => {
     const baseName = path.basename(inputPath, inputExt);
 
     wavPath = path.join(uploadsDir, `${baseName}_16k.wav`);
-    const txtBase = path.join(uploadsDir, `${baseName}_out`);
-    txtPath = `${txtBase}.txt`;
+    txtBase = path.join(uploadsDir, `${baseName}_out`);
+
+    // Determinar formato de salida
+    const outputJson = String(req.query.segments) === 'true';
+    const outputExt = outputJson ? '.json' : '.txt';
+    outPath = `${txtBase}${outputExt}`;
 
     const inputBytes = await getFileSizeBytes(inputPath);
 
-    console.log(`STT[${reqId}] start`);
+    console.log(`STT[${reqId}] start segments=${outputJson} query=${JSON.stringify(req.query)}`);
     console.log(`STT[${reqId}] inputPath=${inputPath}`);
     console.log(`STT[${reqId}] inputBytes=${inputBytes} (${(inputBytes / (1024 * 1024)).toFixed(2)} MB)`);
     console.log(`STT[${reqId}] whisperBin=${whisperBin}`);
@@ -116,7 +121,7 @@ router.post('/', upload.single('audio'), async (req, res) => {
       '-m', whisperModel,
       '-f', wavPath,
       '-l', 'es',
-      '-otxt',
+      outputJson ? '-oj' : '-otxt',
       '-of', txtBase
     ];
     const tWhisper0 = Date.now();
@@ -124,29 +129,53 @@ router.post('/', upload.single('audio'), async (req, res) => {
     await run(whisperBin, whisperArgs, uploadsDir);
     const tWhisperMs = Date.now() - tWhisper0;
 
-    // Leer TXT
+    // Leer Resultado
     const tRead0 = Date.now();
-    const text = (await fs.readFile(txtPath, 'utf8')).trim();
+    const rawContent = (await fs.readFile(outPath, 'utf8')).trim();
     const tReadMs = Date.now() - tRead0;
 
     const totalMs = Date.now() - t0;
 
-    console.log(`STT[${reqId}] whisperDone=${tWhisperMs}ms readTxt=${tReadMs}ms total=${totalMs}ms textChars=${text.length}`);
+    // Preparar respuesta
+    let responseData: any;
+    let textLength = 0;
+
+    if (outputJson) {
+      try {
+        const json = JSON.parse(rawContent);
+        responseData = { ...json, _raw: true }; // Devolver todo el JSON
+        // Intentar extraer texto completo para logs
+        textLength = JSON.stringify(json).length;
+      } catch (e) {
+        console.error(`STT[${reqId}] Error parsing JSON`, e);
+        // Fallback
+        responseData = { text: '', error: 'JSON parse error', raw: rawContent };
+      }
+    } else {
+      responseData = { text: rawContent };
+      textLength = rawContent.length;
+    }
+
+    console.log(`STT[${reqId}] whisperDone=${tWhisperMs}ms read=${tReadMs}ms total=${totalMs}ms len=${textLength}`);
 
     // responder primero
-    res.json({ text });
+    res.json(responseData);
 
     // limpiar después (no bloqueante)
-    fs.unlink(inputPath).catch(() => {});
-    fs.unlink(wavPath).catch(() => {});
-    fs.unlink(txtPath).catch(() => {});
+    fs.unlink(inputPath).catch(() => { });
+    fs.unlink(wavPath).catch(() => { });
+    fs.unlink(outPath).catch(() => { });
   } catch (err: any) {
     const totalMs = Date.now() - t0;
     console.error(`STT[${reqId}] FAIL total=${totalMs}ms`, err);
 
-    if (inputPath) await fs.unlink(inputPath).catch(() => {});
-    if (wavPath) await fs.unlink(wavPath).catch(() => {});
-    if (txtPath) await fs.unlink(txtPath).catch(() => {});
+    if (inputPath) await fs.unlink(inputPath).catch(() => { });
+    if (wavPath) await fs.unlink(wavPath).catch(() => { });
+    // Intentar limpiar ambos por si acaso
+    if (txtBase) {
+      await fs.unlink(`${txtBase}.txt`).catch(() => { });
+      await fs.unlink(`${txtBase}.json`).catch(() => { });
+    }
 
     return res.status(500).json({
       error: 'Error interno en STT',

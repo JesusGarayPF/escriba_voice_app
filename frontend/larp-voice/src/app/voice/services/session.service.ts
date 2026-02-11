@@ -1,18 +1,29 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import Peer, { DataConnection } from 'peerjs';
+import { AudioCaptureService } from './audio-capture.service';
 
 export interface PeerInfo {
     id: string;
     name: string; // Nombre amigable (ej. "Móvil 1")
     conn?: DataConnection;
+    audioChunks: Blob[]; // Buffer de audio recibido
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+
+interface SessionMessage {
+    type: 'welcome' | 'control' | 'audio';
+    payload?: any;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
     private peer: Peer | null = null;
     private connections: Map<string, DataConnection> = new Map();
+    // Mapa interno de info extra (nombre, audioChunks) por peerId
+    private peersInfo: Map<string, { name: string; audioChunks: Blob[] }> = new Map();
+
+    private audioCapture = inject(AudioCaptureService);
 
     // Signals para estado reactivo
     status = signal<ConnectionStatus>('disconnected');
@@ -135,7 +146,88 @@ export class SessionService {
         this.cleanup();
     }
 
+    // --- Control de Grabación (Host -> Todos) ---
+
+    async startRecordingForAll() {
+        if (!this.isHost()) return;
+
+        console.log('[Session] Host inicia grabación global');
+
+        // 1. Enviar señal a todos
+        this.broadcast({ type: 'control', payload: { action: 'start' } });
+
+        // 2. Iniciar mi propia grabación (como host)
+        // El host también graba su audio localmente
+        // Aquí podríamos decidir si el host guarda SU audio en el mismo pool que los participantes
+        // Para simplificar: Sí, el Host se trata como un "participante local" a nivel de audio
+        this.peersInfo.set('me', { name: 'Host (Yo)', audioChunks: [] });
+
+        await this.startLocalRecording();
+    }
+
+    stopRecordingForAll() {
+        if (!this.isHost()) return;
+
+        console.log('[Session] Host detiene grabación global');
+
+        // 1. Enviar señal a todos
+        this.broadcast({ type: 'control', payload: { action: 'stop' } });
+
+        // 2. Detener mi grabación
+        this.audioCapture.stopRecording();
+
+        // 3. Procesar o guardar todo (Fase futura de STT)
+        console.log('[Session] Grabación finalizada. Chunks recolectados:', this.peersInfo);
+    }
+
+    // --- Acceso a Datos (Diarización) ---
+
+    getAllRecordedBlobs(): { id: string; name: string; blobs: Blob[] }[] {
+        const results: { id: string; name: string; blobs: Blob[] }[] = [];
+
+        this.peersInfo.forEach((info, id) => {
+            if (info.audioChunks.length > 0) {
+                results.push({
+                    id,
+                    name: info.name,
+                    blobs: [...info.audioChunks] // Copia
+                });
+            }
+        });
+
+        return results;
+    }
+
     // --- Privados ---
+
+    private async startLocalRecording() {
+        try {
+            await this.audioCapture.startRecording((blob) => {
+                if (this.isHost()) {
+                    // Host guarda su propio audio directamente
+                    const myInfo = this.peersInfo.get('me');
+                    if (myInfo) myInfo.audioChunks.push(blob);
+                } else {
+                    // Participante envía chunk al host
+                    this.sendToHost({ type: 'audio', payload: blob });
+                }
+            });
+        } catch (e) {
+            console.error('[Session] Fallo al iniciar grabación local', e);
+            this.error.set('No se pudo acceder al micrófono para grabar');
+        }
+    }
+
+    private broadcast(msg: SessionMessage) {
+        this.connections.forEach(conn => conn.send(msg));
+    }
+
+    private sendToHost(msg: SessionMessage) {
+        // Si soy participante, tengo una conexión con el host (almacenada en connections, generalmente solo 1)
+        // Pero en mi implementación actual, `connections` tiene al host con su ID real.
+        // Un participante solo debería tener conexión con el HOST.
+        this.connections.forEach(conn => conn.send(msg));
+    }
 
     private cleanup() {
         this.connections.forEach(conn => conn.close());
@@ -148,7 +240,9 @@ export class SessionService {
         this.error.set(null);
         this.sessionId.set(null);
         this.participants.set([]);
+        this.peersInfo.clear();
         this.isHost.set(false);
+        this.audioCapture.stopRecording();
     }
 
     private setupHostListeners() {
@@ -158,26 +252,32 @@ export class SessionService {
             console.log('[Session] Nueva conexión entrante:', conn.peer);
 
             conn.on('open', () => {
-                // Añadir a lista de participantes
+                // Añadir/Actualizar info
                 const name = conn.metadata?.name || 'Anónimo';
+                if (!this.peersInfo.has(conn.peer)) {
+                    this.peersInfo.set(conn.peer, { name, audioChunks: [] });
+                }
+
                 this.connections.set(conn.peer, conn);
 
                 this.updateParticipantsList();
                 this.setupDataListeners(conn);
 
-                // Enviar saludo / estado inicial si fuera necesario
-                conn.send({ type: 'welcome', message: 'Conectado a la sesión' });
+                // Enviar saludo
+                conn.send({ type: 'welcome', payload: 'Conectado a la sesión' });
             });
 
             conn.on('close', () => {
                 console.log('[Session] Conexión cerrada:', conn.peer);
                 this.connections.delete(conn.peer);
+                this.peersInfo.delete(conn.peer); // Eliminar info del participante
                 this.updateParticipantsList();
             });
 
             conn.on('error', (err) => {
                 console.error('[Session] Error en conexión:', err);
                 this.connections.delete(conn.peer);
+                this.peersInfo.delete(conn.peer); // Eliminar info del participante
                 this.updateParticipantsList();
             });
         });
@@ -185,18 +285,63 @@ export class SessionService {
 
     private setupDataListeners(conn: DataConnection) {
         conn.on('data', (data: any) => {
-            console.log('[Session] Dato recibido:', data);
-            // Aquí manejaremos el audio más adelante
+            // data es del tipo SessionMessage o Blob directo si peerjs lo maneja raw
+            // Vamos a asumir estructura { type, payload }
+
+            if (data?.type === 'control') {
+                this.handleControlMessage(data.payload);
+            } else if (data?.type === 'audio') {
+                this.handleAudioMessage(conn.peer, data.payload);
+            } else {
+                console.log('[Session] Dato desconocido:', data);
+            }
         });
+    }
+
+    private handleControlMessage(payload: any) {
+        if (payload?.action === 'start') {
+            console.log('[Session] Recibida orden START');
+            void this.startLocalRecording();
+        } else if (payload?.action === 'stop') {
+            console.log('[Session] Recibida orden STOP');
+            this.audioCapture.stopRecording();
+        }
+    }
+
+    private handleAudioMessage(peerId: string, payload: any) {
+        // payload debería ser un Blob o ArrayBuffer
+        // PeerJS a veces convierte Blobs en ArrayBuffer al recibir
+        let blob: Blob;
+        if (payload instanceof Blob) {
+            blob = payload;
+        } else if (payload instanceof ArrayBuffer) {
+            blob = new Blob([payload], { type: 'audio/webm;codecs=opus' }); // Asumimos formato
+        } else if (payload && payload.constructor === Uint8Array) {
+            blob = new Blob([payload as any], { type: 'audio/webm;codecs=opus' });
+        } else {
+            console.warn('[Session] Audio chunk inválido recibido de', peerId);
+            return;
+        }
+
+        // Guardar en el buffer del peer correspondiente (Solo el Host hace esto)
+        if (this.isHost()) {
+            const info = this.peersInfo.get(peerId);
+            if (info) {
+                info.audioChunks.push(blob);
+                console.log(`[Session] Recibido chunk de ${info.name} (${blob.size} bytes)`);
+            }
+        }
     }
 
     private updateParticipantsList() {
         const list: PeerInfo[] = [];
         this.connections.forEach((conn, id) => {
+            const info = this.peersInfo.get(id);
             list.push({
                 id,
-                name: conn.metadata?.name || 'Participante',
-                conn
+                name: info?.name || 'Participante',
+                conn,
+                audioChunks: info?.audioChunks || []
             });
         });
         this.participants.set(list);

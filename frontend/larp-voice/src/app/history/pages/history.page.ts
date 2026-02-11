@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, Renderer2, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { TopNavBarComponent } from '../../components/layout/topNavBar/top-nav-bar.component';
 import { RightDrawerComponent } from '../../components/layout/rightDrawer/right-drawer.component';
@@ -64,11 +64,23 @@ export class HistoryPage implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private r2: Renderer2
   ) { }
 
   ngOnInit(): void {
-    void this.refresh();
+    // Check query params to select tab
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab && this.isValidCategory(tab)) {
+        this.selected = tab as HistoryCategory;
+      }
+      void this.refresh();
+    });
+  }
+
+  private isValidCategory(c: string): boolean {
+    return ['stt', 'tts', 'diarization', 'summaries'].includes(c);
   }
 
   ngOnDestroy(): void {

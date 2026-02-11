@@ -77,4 +77,40 @@ export class HistoryRecorderService {
       return null;
     }
   }
+
+  /**
+   * Guarda un resultado de diarización (conversación) en el historial.
+   */
+  async recordDiarization(params: {
+    combinedText: string;
+    startTime: number;
+    durationMs: number;
+    speakers: string[]; // Lista de nombres de participantes
+  }): Promise<string | null> {
+    if (!params.combinedText.trim()) return null;
+
+    try {
+      const id = crypto.randomUUID();
+      const item: HistoryItemModel = {
+        id,
+        category: 'diarization',
+        createdAt: params.startTime,
+        name: `Conversación (${params.speakers.length} personas)`, // Nombre sugerido
+        durationMs: params.durationMs,
+        sizeBytes: 0, // Por ahora no guardamos el audio combinado (costoso de generar en frontend)
+        outputText: params.combinedText,
+        // audioId: null, // Sin audio combinado por ahora
+        mimeType: 'text/plain',
+      };
+
+      // TODO: En el futuro, podríamos generar un ZIP con los audios o mezclarlos
+      // Por ahora, solo guardamos el texto transcrito.
+
+      await this.store.upsertItem(item);
+      return id;
+    } catch (e) {
+      console.error('[HistoryRecorderService] Error guardando Diarización:', e);
+      return null;
+    }
+  }
 }

@@ -1,8 +1,10 @@
-import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SessionService } from '../../services/session.service';
+import { AudioCaptureService } from '../../services/audio-capture.service';
+import { DiarizationService } from '../../services/diarization.service';
 import { TopNavBarComponent } from '../../../components/layout/topNavBar/top-nav-bar.component';
 import { RightDrawerComponent } from '../../../components/layout/rightDrawer/right-drawer.component';
 import { ProfilePanelComponent } from '../../../components/layout/panels/profile/profile.component';
@@ -26,13 +28,19 @@ type DrawerMode = 'none' | 'profile' | 'settings';
 })
 export class LobbyPage implements OnDestroy {
     session = inject(SessionService);
+    audio = inject(AudioCaptureService);
+    diarization = inject(DiarizationService);
     private router = inject(Router);
+
+    @ViewChild('joinInput') joinInput?: ElementRef<HTMLInputElement>;
 
     // Estado local para UI
     mode: DrawerMode = 'none';
     joinCode = '';
-    myNick = 'Invitado';
+    myNick = 'Refugio';
     isJoining = false;
+    isProcessing = false;
+    showSuccessModal = false;
 
     get drawerOpen() { return this.mode !== 'none'; }
     get drawerTitle() { return this.mode === 'profile' ? 'Perfil' : 'Configuración'; }
@@ -66,6 +74,68 @@ export class LobbyPage implements OnDestroy {
         } finally {
             this.isJoining = false;
         }
+    }
+
+    async copyCode() {
+        const code = this.session.sessionId();
+        if (!code) return;
+        try {
+            await navigator.clipboard.writeText(code);
+            // TODO: Feedback visual sutil (toast/tooltip)
+            console.log('Código copiado');
+        } catch (e) {
+            console.error('Error copiando:', e);
+        }
+    }
+
+    async pasteCode() {
+        console.log('Intento de pegar código...');
+        // Enfocar input para ayudar al navegador a entender la intención de usuario
+        this.joinInput?.nativeElement.focus();
+
+        try {
+            const text = await navigator.clipboard.readText();
+            console.log('Texto leído del portapapeles:', text);
+            if (text) {
+                this.joinCode = text.trim().substring(0, 6).toUpperCase();
+            }
+        } catch (e) {
+            // Silencioso o log. El navegador ya suele mostrar prompt.
+            console.warn('Permiso de portapapeles denegado o error:', e);
+        }
+    }
+
+    async toggleRecording() {
+        if (!this.session.isHost()) return;
+
+        if (this.audio.isRecording()) {
+            this.session.stopRecordingForAll();
+        } else {
+            await this.session.startRecordingForAll();
+        }
+    }
+
+    async finishAndProcess() {
+        if (!this.session.isHost() || this.audio.isRecording()) return;
+
+        this.isProcessing = true;
+        try {
+            const success = await this.diarization.processSessionAndSave();
+            if (success) {
+                this.showSuccessModal = true;
+            } else {
+                alert('No se pudo procesar: no hay audio grabado.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error procesando sesión: ' + e);
+        } finally {
+            this.isProcessing = false;
+        }
+    }
+
+    goToHistory() {
+        this.router.navigate(['/history'], { queryParams: { tab: 'diarization' } });
     }
 
     leave() {

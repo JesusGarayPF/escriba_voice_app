@@ -2282,6 +2282,31 @@ var EmptyError = createErrorClass((_super) => function EmptyErrorImpl() {
   this.message = "no elements in sequence";
 });
 
+// node_modules/rxjs/dist/esm/internal/lastValueFrom.js
+function lastValueFrom(source, config2) {
+  const hasConfig = typeof config2 === "object";
+  return new Promise((resolve, reject) => {
+    let _hasValue = false;
+    let _value;
+    source.subscribe({
+      next: (value) => {
+        _value = value;
+        _hasValue = true;
+      },
+      error: reject,
+      complete: () => {
+        if (_hasValue) {
+          resolve(_value);
+        } else if (hasConfig) {
+          resolve(config2.defaultValue);
+        } else {
+          reject(new EmptyError());
+        }
+      }
+    });
+  });
+}
+
 // node_modules/rxjs/dist/esm/internal/firstValueFrom.js
 function firstValueFrom(source, config2) {
   const hasConfig = typeof config2 === "object";
@@ -47551,6 +47576,34 @@ var HistoryRecorderService = class _HistoryRecorderService {
       return null;
     }
   }
+  /**
+   * Guarda un resultado de diarización (conversación) en el historial.
+   */
+  async recordDiarization(params) {
+    if (!params.combinedText.trim())
+      return null;
+    try {
+      const id = crypto.randomUUID();
+      const item = {
+        id,
+        category: "diarization",
+        createdAt: params.startTime,
+        name: `Conversaci\xF3n (${params.speakers.length} personas)`,
+        // Nombre sugerido
+        durationMs: params.durationMs,
+        sizeBytes: 0,
+        // Por ahora no guardamos el audio combinado (costoso de generar en frontend)
+        outputText: params.combinedText,
+        // audioId: null, // Sin audio combinado por ahora
+        mimeType: "text/plain"
+      };
+      await this.store.upsertItem(item);
+      return id;
+    } catch (e) {
+      console.error("[HistoryRecorderService] Error guardando Diarizaci\xF3n:", e);
+      return null;
+    }
+  }
   static \u0275fac = function HistoryRecorderService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _HistoryRecorderService)();
   };
@@ -48650,6 +48703,7 @@ var CATEGORY_LABEL = {
 };
 var HistoryPage = class _HistoryPage {
   router;
+  route;
   r2;
   store = inject2(HISTORY_STORE);
   cdr = inject2(ChangeDetectorRef);
@@ -48670,12 +48724,22 @@ var HistoryPage = class _HistoryPage {
   // --- Edición inline del nombre ---
   editingId = null;
   draftName = "";
-  constructor(router, r2) {
+  constructor(router, route, r2) {
     this.router = router;
+    this.route = route;
     this.r2 = r2;
   }
   ngOnInit() {
-    void this.refresh();
+    this.route.queryParams.subscribe((params) => {
+      const tab = params["tab"];
+      if (tab && this.isValidCategory(tab)) {
+        this.selected = tab;
+      }
+      void this.refresh();
+    });
+  }
+  isValidCategory(c) {
+    return ["stt", "tts", "diarization", "summaries"].includes(c);
   }
   ngOnDestroy() {
     this.unlockScroll();
@@ -48848,7 +48912,7 @@ var HistoryPage = class _HistoryPage {
     this.r2.removeStyle(document.body, "overflow");
   }
   static \u0275fac = function HistoryPage_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _HistoryPage)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(Renderer2));
+    return new (__ngFactoryType__ || _HistoryPage)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActivatedRoute), \u0275\u0275directiveInject(Renderer2));
   };
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HistoryPage, selectors: [["app-history-page"]], decls: 32, vars: 11, consts: [["editTpl", ""], ["brandName", "Escriba", "subtitle", "Historial", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "box"], ["aria-label", "Categor\xEDas de historial", 1, "tabs"], ["type", "button", "class", "tab btn-reset kbd-focus", 3, "tab--active", "click", 4, "ngFor", "ngForOf"], ["aria-label", "Lista de outputs", 1, "list"], ["class", "empty", 4, "ngIf"], ["class", "bulletList", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], ["type", "button", 1, "tab", "btn-reset", "kbd-focus", 3, "click"], [1, "empty"], [1, "bulletList"], ["class", "bulletRow", 4, "ngFor", "ngForOf"], [1, "bulletRow"], [1, "left"], [1, "nameLine"], [4, "ngIf", "ngIfElse"], [1, "metaLine"], [1, "meta"], [1, "dot"], [1, "right"], ["type", "button", "title", "Descargar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Compartir", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Borrar", 1, "iconBtn", "danger", "btn-reset", "kbd-focus", 3, "click"], [1, "name"], ["type", "button", "title", "Renombrar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "text", 1, "nameInput", "kbd-focus", 3, "input", "keydown.enter", "keydown.escape", "value"], ["type", "button", "title", "Guardar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Cancelar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"]], template: function HistoryPage_Template(rf, ctx) {
     if (rf & 1) {
@@ -49043,7 +49107,7 @@ var HistoryPage = class _HistoryPage {
   <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>\r
   <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>\r
 </app-right-drawer>`, styles: ["/* src/app/history/pages/history.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n}\n.panel__header h2 {\n  margin: 0;\n  font-size: 18px;\n}\n.hint {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.box {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.box > label {\n  display: block;\n  margin-bottom: 10px;\n  font-weight: 600;\n}\n.tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.tab {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  color: inherit;\n  cursor: pointer;\n  line-height: 1;\n}\n.tab:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.tab--active {\n  border-color: rgba(242, 230, 201, .34);\n  background: rgba(242, 230, 201, .06);\n}\n.list {\n  margin-top: 2px;\n}\n.empty {\n  padding: 12px 12px;\n  border-radius: 12px;\n  border: 1px dashed rgba(242, 230, 201, .18);\n  color: var(--muted);\n}\n.actions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-bottom: 12px;\n}\n.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n.danger:hover {\n  border-color: rgba(255, 120, 120, .35);\n}\n.bulletList {\n  margin: 10px 0 0;\n  padding-left: 18px;\n}\n.bulletRow {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 0;\n  border-bottom: 1px solid rgba(242, 230, 201, .10);\n}\n.left {\n  min-width: 0;\n  flex: 1;\n}\n.nameLine {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.name {\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  max-width: 100%;\n}\n.nameInput {\n  flex: 1;\n  min-width: 180px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .16);\n  background: rgba(255, 255, 255, .03);\n  color: var(--text);\n}\n.metaLine {\n  margin-top: 4px;\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  color: var(--muted);\n  font-size: 12px;\n}\n.dot {\n  opacity: .7;\n}\n.right {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.iconBtn {\n  width: 34px;\n  height: 34px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  display: grid;\n  place-items: center;\n}\n.iconBtn:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.iconBtn.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n/*# sourceMappingURL=history.page.css.map */\n"] }]
-  }], () => [{ type: Router }, { type: Renderer2 }], null);
+  }], () => [{ type: Router }, { type: ActivatedRoute }, { type: Renderer2 }], null);
 })();
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HistoryPage, { className: "HistoryPage", filePath: "src/app/history/pages/history.page.ts", lineNumber: 39 });
@@ -53045,10 +53109,81 @@ var $416260bce337df90$export$ecd1fc136c422448 = class _$416260bce337df90$export$
 };
 var $dd0187d7f28e386f$export$2e2bcd8739ae039 = (0, $416260bce337df90$export$ecd1fc136c422448);
 
+// src/app/voice/services/audio-capture.service.ts
+var AudioCaptureService = class _AudioCaptureService {
+  mediaRecorder = null;
+  stream = null;
+  // Estado
+  isRecording = signal(false, ...ngDevMode ? [{ debugName: "isRecording" }] : []);
+  error = signal(null, ...ngDevMode ? [{ debugName: "error" }] : []);
+  // Callback para emitir chunks
+  onDataCallback = null;
+  constructor() {
+  }
+  async startRecording(onData) {
+    if (this.isRecording())
+      return;
+    this.error.set(null);
+    this.onDataCallback = onData;
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const options = { mimeType: "audio/webm;codecs=opus" };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        console.warn("audio/webm;codecs=opus no soportado, usando default");
+        this.mediaRecorder = new MediaRecorder(this.stream);
+      } else {
+        this.mediaRecorder = new MediaRecorder(this.stream, options);
+      }
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          this.onDataCallback?.(event.data);
+        }
+      };
+      this.mediaRecorder.onstop = () => {
+        this.cleanup();
+      };
+      this.mediaRecorder.start(2e3);
+      this.isRecording.set(true);
+    } catch (e) {
+      console.error("Error iniciando grabaci\xF3n:", e);
+      this.error.set("No se pudo acceder al micr\xF3fono");
+      this.cleanup();
+      throw e;
+    }
+  }
+  stopRecording() {
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+      this.mediaRecorder.stop();
+    }
+    this.isRecording.set(false);
+  }
+  cleanup() {
+    if (this.stream) {
+      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream = null;
+    }
+    this.mediaRecorder = null;
+    this.onDataCallback = null;
+  }
+  static \u0275fac = function AudioCaptureService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AudioCaptureService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AudioCaptureService, factory: _AudioCaptureService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AudioCaptureService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], () => [], null);
+})();
+
 // src/app/voice/services/session.service.ts
 var SessionService = class _SessionService {
   peer = null;
   connections = /* @__PURE__ */ new Map();
+  // Mapa interno de info extra (nombre, audioChunks) por peerId
+  peersInfo = /* @__PURE__ */ new Map();
+  audioCapture = inject2(AudioCaptureService);
   // Signals para estado reactivo
   status = signal("disconnected", ...ngDevMode ? [{ debugName: "status" }] : []);
   error = signal(null, ...ngDevMode ? [{ debugName: "error" }] : []);
@@ -53142,7 +53277,61 @@ var SessionService = class _SessionService {
   disconnect() {
     this.cleanup();
   }
+  // --- Control de Grabación (Host -> Todos) ---
+  async startRecordingForAll() {
+    if (!this.isHost())
+      return;
+    console.log("[Session] Host inicia grabaci\xF3n global");
+    this.broadcast({ type: "control", payload: { action: "start" } });
+    this.peersInfo.set("me", { name: "Host (Yo)", audioChunks: [] });
+    await this.startLocalRecording();
+  }
+  stopRecordingForAll() {
+    if (!this.isHost())
+      return;
+    console.log("[Session] Host detiene grabaci\xF3n global");
+    this.broadcast({ type: "control", payload: { action: "stop" } });
+    this.audioCapture.stopRecording();
+    console.log("[Session] Grabaci\xF3n finalizada. Chunks recolectados:", this.peersInfo);
+  }
+  // --- Acceso a Datos (Diarización) ---
+  getAllRecordedBlobs() {
+    const results = [];
+    this.peersInfo.forEach((info, id) => {
+      if (info.audioChunks.length > 0) {
+        results.push({
+          id,
+          name: info.name,
+          blobs: [...info.audioChunks]
+          // Copia
+        });
+      }
+    });
+    return results;
+  }
   // --- Privados ---
+  async startLocalRecording() {
+    try {
+      await this.audioCapture.startRecording((blob) => {
+        if (this.isHost()) {
+          const myInfo = this.peersInfo.get("me");
+          if (myInfo)
+            myInfo.audioChunks.push(blob);
+        } else {
+          this.sendToHost({ type: "audio", payload: blob });
+        }
+      });
+    } catch (e) {
+      console.error("[Session] Fallo al iniciar grabaci\xF3n local", e);
+      this.error.set("No se pudo acceder al micr\xF3fono para grabar");
+    }
+  }
+  broadcast(msg) {
+    this.connections.forEach((conn) => conn.send(msg));
+  }
+  sendToHost(msg) {
+    this.connections.forEach((conn) => conn.send(msg));
+  }
   cleanup() {
     this.connections.forEach((conn) => conn.close());
     this.connections.clear();
@@ -53154,7 +53343,9 @@ var SessionService = class _SessionService {
     this.error.set(null);
     this.sessionId.set(null);
     this.participants.set([]);
+    this.peersInfo.clear();
     this.isHost.set(false);
+    this.audioCapture.stopRecording();
   }
   setupHostListeners() {
     if (!this.peer)
@@ -53163,35 +53354,77 @@ var SessionService = class _SessionService {
       console.log("[Session] Nueva conexi\xF3n entrante:", conn.peer);
       conn.on("open", () => {
         const name = conn.metadata?.name || "An\xF3nimo";
+        if (!this.peersInfo.has(conn.peer)) {
+          this.peersInfo.set(conn.peer, { name, audioChunks: [] });
+        }
         this.connections.set(conn.peer, conn);
         this.updateParticipantsList();
         this.setupDataListeners(conn);
-        conn.send({ type: "welcome", message: "Conectado a la sesi\xF3n" });
+        conn.send({ type: "welcome", payload: "Conectado a la sesi\xF3n" });
       });
       conn.on("close", () => {
         console.log("[Session] Conexi\xF3n cerrada:", conn.peer);
         this.connections.delete(conn.peer);
+        this.peersInfo.delete(conn.peer);
         this.updateParticipantsList();
       });
       conn.on("error", (err) => {
         console.error("[Session] Error en conexi\xF3n:", err);
         this.connections.delete(conn.peer);
+        this.peersInfo.delete(conn.peer);
         this.updateParticipantsList();
       });
     });
   }
   setupDataListeners(conn) {
     conn.on("data", (data) => {
-      console.log("[Session] Dato recibido:", data);
+      if (data?.type === "control") {
+        this.handleControlMessage(data.payload);
+      } else if (data?.type === "audio") {
+        this.handleAudioMessage(conn.peer, data.payload);
+      } else {
+        console.log("[Session] Dato desconocido:", data);
+      }
     });
+  }
+  handleControlMessage(payload) {
+    if (payload?.action === "start") {
+      console.log("[Session] Recibida orden START");
+      void this.startLocalRecording();
+    } else if (payload?.action === "stop") {
+      console.log("[Session] Recibida orden STOP");
+      this.audioCapture.stopRecording();
+    }
+  }
+  handleAudioMessage(peerId, payload) {
+    let blob;
+    if (payload instanceof Blob) {
+      blob = payload;
+    } else if (payload instanceof ArrayBuffer) {
+      blob = new Blob([payload], { type: "audio/webm;codecs=opus" });
+    } else if (payload && payload.constructor === Uint8Array) {
+      blob = new Blob([payload], { type: "audio/webm;codecs=opus" });
+    } else {
+      console.warn("[Session] Audio chunk inv\xE1lido recibido de", peerId);
+      return;
+    }
+    if (this.isHost()) {
+      const info = this.peersInfo.get(peerId);
+      if (info) {
+        info.audioChunks.push(blob);
+        console.log(`[Session] Recibido chunk de ${info.name} (${blob.size} bytes)`);
+      }
+    }
   }
   updateParticipantsList() {
     const list = [];
     this.connections.forEach((conn, id) => {
+      const info = this.peersInfo.get(id);
       list.push({
         id,
-        name: conn.metadata?.name || "Participante",
-        conn
+        name: info?.name || "Participante",
+        conn,
+        audioChunks: info?.audioChunks || []
       });
     });
     this.participants.set(list);
@@ -53208,10 +53441,84 @@ var SessionService = class _SessionService {
   }], () => [], null);
 })();
 
+// src/app/voice/services/diarization.service.ts
+var DiarizationService = class _DiarizationService {
+  session = inject2(SessionService);
+  recorder = inject2(HistoryRecorderService);
+  http = inject2(HttpClient);
+  async processSessionAndSave() {
+    const participants = this.session.participants();
+    const sessionId = this.session.sessionId();
+    const startTime = Date.now();
+    const recordings = this.session.getAllRecordedBlobs();
+    if (recordings.length === 0) {
+      console.warn("No hay grabaciones para procesar");
+      return false;
+    }
+    const segments = [];
+    const speakerNames = [];
+    for (const rec of recordings) {
+      speakerNames.push(rec.name);
+      const fullBlob = new Blob(rec.blobs, { type: "audio/webm" });
+      try {
+        const json = await this.transcribeWithSegments(fullBlob);
+        if (json && json.transcription) {
+          json.transcription.forEach((seg) => {
+            segments.push({
+              speaker: rec.name,
+              startMs: seg.offsets.from,
+              endMs: seg.offsets.to,
+              text: seg.text.trim()
+            });
+          });
+        }
+      } catch (e) {
+        console.error(`Error transcribiendo canal de ${rec.name}:`, e);
+      }
+    }
+    segments.sort((a, b) => a.startMs - b.startMs);
+    const combinedText = segments.map((s) => {
+      const timeStr = this.formatTime(s.startMs);
+      return `[${timeStr}] ${s.speaker}: ${s.text}`;
+    }).join("\n");
+    const lastSeg = segments[segments.length - 1];
+    const durationMs = lastSeg ? lastSeg.endMs : 0;
+    await this.recorder.recordDiarization({
+      combinedText,
+      startTime: Date.now() - durationMs,
+      // Estimado
+      durationMs,
+      speakers: speakerNames
+    });
+    return true;
+  }
+  async transcribeWithSegments(blob) {
+    const formData = new FormData();
+    formData.append("audio", blob);
+    return await lastValueFrom(this.http.post("/api/stt?segments=true", formData));
+  }
+  formatTime(ms) {
+    const totalSec = Math.floor(ms / 1e3);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  static \u0275fac = function DiarizationService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _DiarizationService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _DiarizationService, factory: _DiarizationService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DiarizationService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/voice/pages/lobby/lobby.page.ts
 function LobbyPage_section_10_div_34_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 23)(1, "div", 24);
+    \u0275\u0275elementStart(0, "div", 24)(1, "div", 25);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd()();
   }
@@ -53224,13 +53531,13 @@ function LobbyPage_section_10_div_34_Template(rf, ctx) {
 function LobbyPage_section_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "section", 11)(1, "div", 12)(2, "h2");
+    \u0275\u0275elementStart(0, "section", 12)(1, "div", 13)(2, "h2");
     \u0275\u0275text(3, "Iniciar Sesi\xF3n");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 13);
+    \u0275\u0275elementStart(4, "div", 14);
     \u0275\u0275text(5, "Elige c\xF3mo quieres participar en la conversaci\xF3n.");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "div", 14)(7, "div", 15)(8, "h3");
+    \u0275\u0275elementStart(6, "div", 15)(7, "div", 16)(8, "h3");
     \u0275\u0275text(9, "Crear Sala");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(10, "p");
@@ -53238,7 +53545,7 @@ function LobbyPage_section_10_Template(rf, ctx) {
     \u0275\u0275element(12, "br");
     \u0275\u0275text(13, "Tu dispositivo procesar\xE1 el audio.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "button", 16);
+    \u0275\u0275elementStart(14, "button", 17);
     \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_14_listener() {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53246,8 +53553,8 @@ function LobbyPage_section_10_Template(rf, ctx) {
     });
     \u0275\u0275text(15, " Nueva Sala ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(16, "div", 17);
-    \u0275\u0275elementStart(17, "div", 15)(18, "h3");
+    \u0275\u0275element(16, "div", 18);
+    \u0275\u0275elementStart(17, "div", 16)(18, "h3");
     \u0275\u0275text(19, "Unirse a Sala");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(20, "p");
@@ -53255,10 +53562,10 @@ function LobbyPage_section_10_Template(rf, ctx) {
     \u0275\u0275element(22, "br");
     \u0275\u0275text(23, "usando su c\xF3digo.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(24, "div", 18)(25, "label");
+    \u0275\u0275elementStart(24, "div", 19)(25, "label");
     \u0275\u0275text(26, "Tu Nombre");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(27, "input", 19);
+    \u0275\u0275elementStart(27, "input", 20);
     \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_10_Template_input_ngModelChange_27_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53266,10 +53573,10 @@ function LobbyPage_section_10_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(28, "div", 18)(29, "label");
+    \u0275\u0275elementStart(28, "div", 19)(29, "label");
     \u0275\u0275text(30, "C\xF3digo de Sala");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(31, "input", 20);
+    \u0275\u0275elementStart(31, "input", 21);
     \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_10_Template_input_ngModelChange_31_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53277,7 +53584,7 @@ function LobbyPage_section_10_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(32, "button", 21);
+    \u0275\u0275elementStart(32, "button", 22);
     \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_32_listener() {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53285,7 +53592,7 @@ function LobbyPage_section_10_Template(rf, ctx) {
     });
     \u0275\u0275text(33);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275template(34, LobbyPage_section_10_div_34_Template, 3, 1, "div", 22);
+    \u0275\u0275template(34, LobbyPage_section_10_div_34_Template, 3, 1, "div", 23);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -53302,29 +53609,36 @@ function LobbyPage_section_10_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.session.status() === "error");
   }
 }
-function LobbyPage_section_11_div_5_Template(rf, ctx) {
+function LobbyPage_section_11_span_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 13);
+    \u0275\u0275elementStart(0, "span", 45);
+    \u0275\u0275text(1, "\u{1F534} GRABANDO");
+    \u0275\u0275elementEnd();
+  }
+}
+function LobbyPage_section_11_div_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 14);
     \u0275\u0275text(1, "Comparte este c\xF3digo con los dem\xE1s:");
     \u0275\u0275elementEnd();
   }
 }
-function LobbyPage_section_11_div_8_Template(rf, ctx) {
+function LobbyPage_section_11_div_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 13);
+    \u0275\u0275elementStart(0, "div", 14);
     \u0275\u0275text(1, "Conectado a la sala. Esperando al anfitri\xF3n.");
     \u0275\u0275elementEnd();
   }
 }
-function LobbyPage_section_11_li_21_Template(rf, ctx) {
+function LobbyPage_section_11_li_23_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "li", 40)(1, "div", 32);
+    \u0275\u0275elementStart(0, "li", 46)(1, "div", 35);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 33)(4, "span", 34);
+    \u0275\u0275elementStart(3, "div", 36)(4, "span", 37);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "span", 35);
+    \u0275\u0275elementStart(6, "span", 38);
     \u0275\u0275text(7, "\u25CF Conectado");
     \u0275\u0275elementEnd()()();
   }
@@ -53336,56 +53650,97 @@ function LobbyPage_section_11_li_21_Template(rf, ctx) {
     \u0275\u0275textInterpolate(p_r4.name);
   }
 }
-function LobbyPage_section_11_button_25_Template(rf, ctx) {
+function LobbyPage_section_11_button_27_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "button", 41);
-    \u0275\u0275text(1, " \u25CF Iniciar Grabaci\xF3n ");
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 47);
+    \u0275\u0275listener("click", function LobbyPage_section_11_button_27_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.finishAndProcess());
+    });
+    \u0275\u0275text(1, " \u{1F4BE} Procesar y Guardar ");
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("disabled", ctx_r1.isProcessing);
+  }
+}
+function LobbyPage_section_11_button_28_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 47);
+    \u0275\u0275listener("click", function LobbyPage_section_11_button_28_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.toggleRecording());
+    });
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275classProp("recording", ctx_r1.audio.isRecording());
+    \u0275\u0275property("disabled", ctx_r1.isProcessing);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r1.audio.isRecording() ? "\u25A0 Detener Grabaci\xF3n" : "\u25CF Iniciar Grabaci\xF3n", " ");
+  }
+}
+function LobbyPage_section_11_div_29_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 48);
+    \u0275\u0275text(1, " Grabando audio... ");
     \u0275\u0275elementEnd();
   }
 }
 function LobbyPage_section_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "section", 11)(1, "div", 12)(2, "div", 25)(3, "span", 26);
-    \u0275\u0275text(4);
+    \u0275\u0275elementStart(0, "section", 12)(1, "div", 13)(2, "div", 26)(3, "div", 27)(4, "span", 28);
+    \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, LobbyPage_section_11_div_5_Template, 2, 0, "div", 27);
-    \u0275\u0275elementStart(6, "div", 28);
-    \u0275\u0275text(7);
+    \u0275\u0275template(6, LobbyPage_section_11_span_6_Template, 2, 0, "span", 29);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(8, LobbyPage_section_11_div_8_Template, 2, 0, "div", 27);
+    \u0275\u0275template(7, LobbyPage_section_11_div_7_Template, 2, 0, "div", 30);
+    \u0275\u0275elementStart(8, "div", 31);
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(10, LobbyPage_section_11_div_10_Template, 2, 0, "div", 30);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(9, "div", 29)(10, "label");
-    \u0275\u0275text(11);
+    \u0275\u0275elementStart(11, "div", 32)(12, "label");
+    \u0275\u0275text(13);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "ul", 30)(13, "li", 31)(14, "div", 32);
-    \u0275\u0275text(15, "Yo");
+    \u0275\u0275elementStart(14, "ul", 33)(15, "li", 34)(16, "div", 35);
+    \u0275\u0275text(17, "Yo");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "div", 33)(17, "span", 34);
-    \u0275\u0275text(18);
+    \u0275\u0275elementStart(18, "div", 36)(19, "span", 37);
+    \u0275\u0275text(20);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "span", 35);
-    \u0275\u0275text(20, "\u25CF Online");
+    \u0275\u0275elementStart(21, "span", 38);
+    \u0275\u0275text(22, "\u25CF Online");
     \u0275\u0275elementEnd()()();
-    \u0275\u0275template(21, LobbyPage_section_11_li_21_Template, 8, 2, "li", 36);
+    \u0275\u0275template(23, LobbyPage_section_11_li_23_Template, 8, 2, "li", 39);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(22, "div", 37)(23, "button", 38);
-    \u0275\u0275listener("click", function LobbyPage_section_11_Template_button_click_23_listener() {
+    \u0275\u0275elementStart(24, "div", 40)(25, "button", 41);
+    \u0275\u0275listener("click", function LobbyPage_section_11_Template_button_click_25_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.leave());
     });
-    \u0275\u0275text(24, "Abandonar Sala");
+    \u0275\u0275text(26, " Abandonar Sala ");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(25, LobbyPage_section_11_button_25_Template, 2, 0, "button", 39);
+    \u0275\u0275template(27, LobbyPage_section_11_button_27_Template, 2, 1, "button", 42)(28, LobbyPage_section_11_button_28_Template, 2, 4, "button", 43)(29, LobbyPage_section_11_div_29_Template, 2, 0, "div", 44);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(3);
+    \u0275\u0275advance(4);
     \u0275\u0275classProp("host", ctx_r1.session.isHost());
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r1.session.isHost() ? "ANFITRI\xD3N" : "INVITADO");
+    \u0275\u0275textInterpolate1(" ", ctx_r1.session.isHost() ? "ANFITRI\xD3N" : "INVITADO", " ");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.audio.isRecording());
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r1.session.isHost());
     \u0275\u0275advance(2);
@@ -53398,14 +53753,20 @@ function LobbyPage_section_11_Template(rf, ctx) {
     \u0275\u0275textInterpolate2("", ctx_r1.myNick, " ", ctx_r1.session.isHost() ? "(Host)" : "");
     \u0275\u0275advance(3);
     \u0275\u0275property("ngForOf", ctx_r1.session.participants());
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("disabled", ctx_r1.audio.isRecording());
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngIf", ctx_r1.session.isHost() && !ctx_r1.audio.isRecording() && ctx_r1.session.getAllRecordedBlobs().length > 0);
+    \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r1.session.isHost());
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !ctx_r1.session.isHost() && ctx_r1.audio.isRecording());
   }
 }
 function LobbyPage_div_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 42);
-    \u0275\u0275element(1, "div", 43);
+    \u0275\u0275elementStart(0, "div", 49);
+    \u0275\u0275element(1, "div", 50);
     \u0275\u0275elementStart(2, "h3");
     \u0275\u0275text(3, "Conectando...");
     \u0275\u0275elementEnd();
@@ -53414,24 +53775,62 @@ function LobbyPage_div_12_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
   }
 }
-function LobbyPage_app_profile_panel_14_Template(rf, ctx) {
+function LobbyPage_div_13_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 49);
+    \u0275\u0275element(1, "div", 50);
+    \u0275\u0275elementStart(2, "h3");
+    \u0275\u0275text(3, "Procesando...");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p");
+    \u0275\u0275text(5, "Transcribiendo y combinando audios.");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "p", 14);
+    \u0275\u0275text(7, "Esto puede tardar unos minutos.");
+    \u0275\u0275elementEnd()();
+  }
+}
+function LobbyPage_div_14_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 51)(1, "div", 52)(2, "div", 53)(3, "div", 5);
+    \u0275\u0275text(4, "Guardado Exitoso");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(5, "div", 54)(6, "div", 55);
+    \u0275\u0275text(7, "La conversaci\xF3n se ha procesado y guardado correctamente en tu historial.");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(8, "div", 56)(9, "button", 17);
+    \u0275\u0275listener("click", function LobbyPage_div_14_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.goToHistory());
+    });
+    \u0275\u0275text(10, "Ver en Historial");
+    \u0275\u0275elementEnd()()()();
+  }
+}
+function LobbyPage_app_profile_panel_16_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-profile-panel");
   }
 }
-function LobbyPage_app_settings_panel_15_Template(rf, ctx) {
+function LobbyPage_app_settings_panel_17_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-settings-panel");
   }
 }
 var LobbyPage = class _LobbyPage {
   session = inject2(SessionService);
+  audio = inject2(AudioCaptureService);
+  diarization = inject2(DiarizationService);
   router = inject2(Router);
   // Estado local para UI
   mode = "none";
   joinCode = "";
-  myNick = "Invitado";
+  myNick = "Refugio";
   isJoining = false;
+  isProcessing = false;
+  showSuccessModal = false;
   get drawerOpen() {
     return this.mode !== "none";
   }
@@ -53463,6 +53862,36 @@ var LobbyPage = class _LobbyPage {
       this.isJoining = false;
     }
   }
+  async toggleRecording() {
+    if (!this.session.isHost())
+      return;
+    if (this.audio.isRecording()) {
+      this.session.stopRecordingForAll();
+    } else {
+      await this.session.startRecordingForAll();
+    }
+  }
+  async finishAndProcess() {
+    if (!this.session.isHost() || this.audio.isRecording())
+      return;
+    this.isProcessing = true;
+    try {
+      const success = await this.diarization.processSessionAndSave();
+      if (success) {
+        this.showSuccessModal = true;
+      } else {
+        alert("No se pudo procesar: no hay audio grabado.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error procesando sesi\xF3n: " + e);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+  goToHistory() {
+    this.router.navigate(["/history"], { queryParams: { tab: "diarization" } });
+  }
   leave() {
     this.session.disconnect();
     this.joinCode = "";
@@ -53483,7 +53912,7 @@ var LobbyPage = class _LobbyPage {
   static \u0275fac = function LobbyPage_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _LobbyPage)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LobbyPage, selectors: [["app-lobby-page"]], decls: 16, vars: 7, consts: [["brandName", "Escriba", "subtitle", "Diarizaci\xF3n", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], ["class", "panel", 4, "ngIf"], ["class", "loading-overlay", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "actions-grid"], [1, "action-col"], [1, "btn", "btn-primary", 3, "click"], [1, "divider-v"], [1, "form-group"], ["type", "text", "placeholder", "Ej. Juan", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "######", "maxlength", "6", 1, "code-input", 3, "ngModelChange", "ngModel"], [1, "btn", 3, "click", "disabled"], ["class", "box", "style", "margin-top: 20px; border-color: #ff4d4f; background: rgba(255,77,79,0.1);", 4, "ngIf"], [1, "box", 2, "margin-top", "20px", "border-color", "#ff4d4f", "background", "rgba(255,77,79,0.1)"], [2, "color", "#ff4d4f", "font-weight", "bold", "text-align", "center"], [1, "session-info"], [1, "role-badge"], ["class", "hint", 4, "ngIf"], [1, "session-code"], [1, "box"], [1, "participants-list"], [1, "p-item", "me"], [1, "p-avatar"], [1, "p-info"], [1, "p-name"], [1, "p-status"], ["class", "p-item", 4, "ngFor", "ngForOf"], [1, "controls-bar"], [1, "btn", "btn-danger", 3, "click"], ["class", "btn btn-primary", "disabled", "", "title", "Pr\xF3ximamente en Fase 2", 4, "ngIf"], [1, "p-item"], ["disabled", "", "title", "Pr\xF3ximamente en Fase 2", 1, "btn", "btn-primary"], [1, "loading-overlay"], [1, "spinner"]], template: function LobbyPage_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LobbyPage, selectors: [["app-lobby-page"]], decls: 18, vars: 9, consts: [["brandName", "Escriba", "subtitle", "Diarizaci\xF3n", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], ["class", "panel", 4, "ngIf"], ["class", "loading-overlay", 4, "ngIf"], ["class", "overlay", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "actions-grid"], [1, "action-col"], [1, "btn", "btn-primary", 3, "click"], [1, "divider-v"], [1, "form-group"], ["type", "text", "placeholder", "Ej. Juan", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "######", "maxlength", "6", 1, "code-input", 3, "ngModelChange", "ngModel"], [1, "btn", 3, "click", "disabled"], ["class", "box", "style", "margin-top: 20px; border-color: #ff4d4f; background: rgba(255,77,79,0.1);", 4, "ngIf"], [1, "box", 2, "margin-top", "20px", "border-color", "#ff4d4f", "background", "rgba(255,77,79,0.1)"], [2, "color", "#ff4d4f", "font-weight", "bold", "text-align", "center"], [1, "session-info"], [1, "badges"], [1, "role-badge"], ["class", "rec-badge", 4, "ngIf"], ["class", "hint", 4, "ngIf"], [1, "session-code"], [1, "box"], [1, "participants-list"], [1, "p-item", "me"], [1, "p-avatar"], [1, "p-info"], [1, "p-name"], [1, "p-status"], ["class", "p-item", 4, "ngFor", "ngForOf"], [1, "controls-bar"], [1, "btn", "btn-danger", 3, "click", "disabled"], ["class", "btn btn-primary", 3, "disabled", "click", 4, "ngIf"], ["class", "btn btn-primary", 3, "recording", "disabled", "click", 4, "ngIf"], ["class", "recording-status", 4, "ngIf"], [1, "rec-badge"], [1, "p-item"], [1, "btn", "btn-primary", 3, "click", "disabled"], [1, "recording-status"], [1, "loading-overlay"], [1, "spinner"], [1, "overlay"], [1, "modal"], [1, "header"], [1, "body"], [1, "text"], [1, "footer"]], template: function LobbyPage_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "app-top-nav-bar", 0);
       \u0275\u0275listener("profileClick", function LobbyPage_Template_app_top_nav_bar_profileClick_0_listener() {
@@ -53504,13 +53933,13 @@ var LobbyPage = class _LobbyPage {
       \u0275\u0275elementStart(8, "div", 6);
       \u0275\u0275text(9, "Sala multi-hablante");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275template(10, LobbyPage_section_10_Template, 35, 5, "section", 7)(11, LobbyPage_section_11_Template, 26, 11, "section", 7)(12, LobbyPage_div_12_Template, 6, 0, "div", 8);
+      \u0275\u0275template(10, LobbyPage_section_10_Template, 35, 5, "section", 7)(11, LobbyPage_section_11_Template, 30, 15, "section", 7)(12, LobbyPage_div_12_Template, 6, 0, "div", 8)(13, LobbyPage_div_13_Template, 8, 0, "div", 8)(14, LobbyPage_div_14_Template, 11, 0, "div", 9);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(13, "app-right-drawer", 9);
-      \u0275\u0275listener("close", function LobbyPage_Template_app_right_drawer_close_13_listener() {
+      \u0275\u0275elementStart(15, "app-right-drawer", 10);
+      \u0275\u0275listener("close", function LobbyPage_Template_app_right_drawer_close_15_listener() {
         return ctx.closeDrawer();
       });
-      \u0275\u0275template(14, LobbyPage_app_profile_panel_14_Template, 1, 0, "app-profile-panel", 10)(15, LobbyPage_app_settings_panel_15_Template, 1, 0, "app-settings-panel", 10);
+      \u0275\u0275template(16, LobbyPage_app_profile_panel_16_Template, 1, 0, "app-profile-panel", 11)(17, LobbyPage_app_settings_panel_17_Template, 1, 0, "app-settings-panel", 11);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -53520,6 +53949,10 @@ var LobbyPage = class _LobbyPage {
       \u0275\u0275property("ngIf", ctx.session.status() === "connected");
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.session.status() === "connecting");
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", ctx.isProcessing);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", ctx.showSuccessModal);
       \u0275\u0275advance();
       \u0275\u0275property("open", ctx.drawerOpen)("title", ctx.drawerTitle);
       \u0275\u0275advance();
@@ -53540,7 +53973,7 @@ var LobbyPage = class _LobbyPage {
     RightDrawerComponent,
     ProfilePanelComponent,
     SettingsPanelComponent
-  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header[_ngcontent-%COMP%] {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint[_ngcontent-%COMP%] {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v[_ngcontent-%COMP%] {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text][_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn[_ngcontent-%COMP%]:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn[_ngcontent-%COMP%]:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary[_ngcontent-%COMP%]:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-danger[_ngcontent-%COMP%] {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.session-code[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.participants-list[_ngcontent-%COMP%] {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me[_ngcontent-%COMP%] {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name[_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.loading-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner[_ngcontent-%COMP%] {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: _ngcontent-%COMP%_spin 1s linear infinite;\n}\n@keyframes _ngcontent-%COMP%_spin {\n  to {\n    transform: rotate(360deg);\n  }\n}\n@media (max-width: 650px) {\n  .actions-grid[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v[_ngcontent-%COMP%] {\n    height: 1px;\n    width: 100%;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */"] });
+  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header[_ngcontent-%COMP%] {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint[_ngcontent-%COMP%] {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v[_ngcontent-%COMP%] {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text][_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn[_ngcontent-%COMP%]:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn[_ngcontent-%COMP%]:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary[_ngcontent-%COMP%]:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording[_ngcontent-%COMP%] {\n  background: #ff4d4f;\n  color: white;\n  animation: _ngcontent-%COMP%_pulse 2s infinite;\n}\n@keyframes _ngcontent-%COMP%_pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger[_ngcontent-%COMP%] {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: _ngcontent-%COMP%_blink 1s infinite alternate;\n}\n@keyframes _ngcontent-%COMP%_blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list[_ngcontent-%COMP%] {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me[_ngcontent-%COMP%] {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name[_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status[_ngcontent-%COMP%] {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: _ngcontent-%COMP%_blink 2s infinite;\n}\n.loading-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner[_ngcontent-%COMP%] {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v[_ngcontent-%COMP%] {\n    height: 1px;\n    width: 100%;\n  }\n}\n.overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal[_ngcontent-%COMP%] {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: _ngcontent-%COMP%_slideUp 0.2s ease-out;\n}\n.header[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title[_ngcontent-%COMP%] {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body[_ngcontent-%COMP%] {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LobbyPage, [{
@@ -53621,8 +54054,13 @@ var LobbyPage = class _LobbyPage {
     <section class="panel" *ngIf="session.status() === 'connected'">\r
         <div class="panel__header">\r
             <div class="session-info">\r
-                <span class="role-badge" [class.host]="session.isHost()">{{ session.isHost() ? 'ANFITRI\xD3N' : 'INVITADO'\r
-                    }}</span>\r
+                <div class="badges">\r
+                    <span class="role-badge" [class.host]="session.isHost()">\r
+                        {{ session.isHost() ? 'ANFITRI\xD3N' : 'INVITADO' }}\r
+                    </span>\r
+                    <span class="rec-badge" *ngIf="audio.isRecording()">\u{1F534} GRABANDO</span>\r
+                </div>\r
+\r
                 <div class="hint" *ngIf="session.isHost()">Comparte este c\xF3digo con los dem\xE1s:</div>\r
                 <div class="session-code">{{ session.sessionId() }}</div>\r
                 <div class="hint" *ngIf="!session.isHost()">Conectado a la sala. Esperando al anfitri\xF3n.</div>\r
@@ -53652,12 +54090,27 @@ var LobbyPage = class _LobbyPage {
         </div>\r
 \r
         <div class="controls-bar">\r
-            <button class="btn btn-danger" (click)="leave()">Abandonar Sala</button>\r
-\r
-            <!-- Futura acci\xF3n Fase 2 -->\r
-            <button class="btn btn-primary" *ngIf="session.isHost()" disabled title="Pr\xF3ximamente en Fase 2">\r
-                \u25CF Iniciar Grabaci\xF3n\r
+            <button class="btn btn-danger" (click)="leave()" [disabled]="audio.isRecording()">\r
+                Abandonar Sala\r
             </button>\r
+\r
+            <!-- Acci\xF3n Host: Procesar -->\r
+            <button class="btn btn-primary"\r
+                *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length > 0"\r
+                (click)="finishAndProcess()" [disabled]="isProcessing">\r
+                \u{1F4BE} Procesar y Guardar\r
+            </button>\r
+\r
+            <!-- Acci\xF3n Host: Grabar -->\r
+            <button class="btn btn-primary" *ngIf="session.isHost()" (click)="toggleRecording()"\r
+                [class.recording]="audio.isRecording()" [disabled]="isProcessing">\r
+                {{ audio.isRecording() ? '\u25A0 Detener Grabaci\xF3n' : '\u25CF Iniciar Grabaci\xF3n' }}\r
+            </button>\r
+\r
+            <!-- Estado Participante -->\r
+            <div *ngIf="!session.isHost() && audio.isRecording()" class="recording-status">\r
+                Grabando audio...\r
+            </div>\r
         </div>\r
     </section>\r
 \r
@@ -53667,16 +54120,38 @@ var LobbyPage = class _LobbyPage {
         <h3>Conectando...</h3>\r
         <p>Estableciendo conexi\xF3n segura P2P</p>\r
     </div>\r
+\r
+    <div class="loading-overlay" *ngIf="isProcessing">\r
+        <div class="spinner"></div>\r
+        <h3>Procesando...</h3>\r
+        <p>Transcribiendo y combinando audios.</p>\r
+        <p class="hint">Esto puede tardar unos minutos.</p>\r
+    </div>\r
+\r
+    <!-- Modal de \xC9xito Personalizado -->\r
+    <div class="overlay" *ngIf="showSuccessModal">\r
+        <div class="modal">\r
+            <div class="header">\r
+                <div class="title">Guardado Exitoso</div>\r
+            </div>\r
+            <div class="body">\r
+                <div class="text">La conversaci\xF3n se ha procesado y guardado correctamente en tu historial.</div>\r
+            </div>\r
+            <div class="footer">\r
+                <button class="btn btn-primary" (click)="goToHistory()">Ver en Historial</button>\r
+            </div>\r
+        </div>\r
+    </div>\r
 </main>\r
 \r
 <app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">\r
     <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>\r
     <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>\r
-</app-right-drawer>`, styles: ["/* src/app/voice/pages/lobby/lobby.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header h2 {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col h3 {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col p {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-danger {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.session-code {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.participants-list {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.loading-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@keyframes spin {\n  to {\n    transform: rotate(360deg);\n  }\n}\n@media (max-width: 650px) {\n  .actions-grid {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v {\n    height: 1px;\n    width: 100%;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */\n"] }]
+</app-right-drawer>`, styles: ["/* src/app/voice/pages/lobby/lobby.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header h2 {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col h3 {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col p {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording {\n  background: #ff4d4f;\n  color: white;\n  animation: pulse 2s infinite;\n}\n@keyframes pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: blink 1s infinite alternate;\n}\n@keyframes blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: blink 2s infinite;\n}\n.loading-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v {\n    height: 1px;\n    width: 100%;\n  }\n}\n.overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: fadeIn 0.2s ease-out;\n}\n.modal {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: slideUp 0.2s ease-out;\n}\n.header {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */\n"] }]
   }], () => [], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LobbyPage, { className: "LobbyPage", filePath: "src/app/voice/pages/lobby/lobby.page.ts", lineNumber: 27 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LobbyPage, { className: "LobbyPage", filePath: "src/app/voice/pages/lobby/lobby.page.ts", lineNumber: 29 });
 })();
 
 // src/app/app.routes.ts
