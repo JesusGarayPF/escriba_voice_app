@@ -367,6 +367,32 @@ input.code-input {
   }
 }
 
+/* Context Box */
+.context-box {
+  flex: 1;
+  min-width: 200px;
+  margin: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.context-box textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.context-box textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
 /* Modal Overlay Styles */
 .overlay {
   position: fixed;

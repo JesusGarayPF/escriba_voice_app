@@ -1,128 +1,146 @@
 import { Injectable, inject } from '@angular/core';
-import { HISTORY_STORE } from '../contracts/history-store.token';
+import { HttpClient } from '@angular/common/http';
+import { HistoryRecorderService } from './history-recorder.service';
 import { HistoryItemModel } from '../models/history-item.model';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class HistoryDownloadService {
-    private store = inject(HISTORY_STORE);
+    private http = inject(HttpClient);
+    private recorder = inject(HistoryRecorderService);
 
-    /**
-     * Descarga el contenido de un item del historial.
-     * @returns true si tuvo éxito, false si no había contenido o falló.
-     */
-    async download(item: HistoryItemModel): Promise<boolean> {
+    private readonly baseUrl = 'http://localhost:3000';
+
+    async downloadMixedAudio(item: HistoryItemModel) {
+        if (!item.participantAudioIds) {
+            console.warn('Este item no tiene audios de participantes');
+            return;
+        }
+
+        const audioIds = Object.values(item.participantAudioIds);
+        if (audioIds.length === 0) return;
+
         try {
-            const audioId = item.audioId ?? item.id;
-            const blob = await this.store.getAudio(audioId);
-
-            if (blob && blob.size > 0) {
-                const ext = this.getExtension(item.mimeType);
-                const baseName = item.name?.trim() || this.getTextPreview(item) || 'audio';
-                const filename = this.sanitizeFilename(baseName) + '.' + ext;
-                this.triggerDownload(blob, filename);
-                return true;
+            // 1. Recuperar blobs de IndexedDB
+            const blobs: Blob[] = [];
+            for (const id of audioIds) {
+                const audio = await this.recorder.getAudio(id);
+                if (audio && audio.blob) {
+                    blobs.push(audio.blob);
+                }
             }
 
-            const text = item.outputText ?? item.inputText;
-            if (text && text.trim()) {
-                const baseName = item.name?.trim() || text.slice(0, 30) || 'texto';
-                const filename = this.sanitizeFilename(baseName) + '.txt';
-                this.triggerDownload(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
-                return true;
+            if (blobs.length === 0) {
+                alert('No se encontraron los archivos de audio originales en el dispositivo.');
+                return;
             }
 
-            return false;
+            // 2. Si solo hay uno, descargar directo
+            if (blobs.length === 1) {
+                this.downloadBlob(blobs[0], `audio_${item.name}.webm`);
+                return;
+            }
+
+            // 3. Si hay varios, enviar a /mix
+            const formData = new FormData();
+            blobs.forEach((blob, index) => {
+                formData.append('audio', blob, `track_${index}.webm`);
+            });
+
+            console.log(`Enviando ${blobs.length} pistas para mezclar...`);
+
+            const response = await lastValueFrom(
+                this.http.post(`${this.baseUrl}/mix`, formData, {
+                    responseType: 'blob'
+                })
+            );
+
+            // 4. Descargar resultado
+            this.downloadBlob(response, `conversacion_${item.name}.mp3`);
+
         } catch (e) {
-            console.error('[HistoryDownloadService] Error descargando:', e);
-            return false;
+            console.error('Error descargando audio mezclado:', e);
+            alert('Error generando la mezcla de audio.');
         }
     }
 
-    /**
-     * Comparte el contenido usando Web Share API o fallback a clipboard.
-     * @returns 'shared' | 'copied' | 'nothing'
-     */
-    async share(item: HistoryItemModel): Promise<'shared' | 'copied' | 'nothing'> {
-        try {
-            const audioId = item.audioId ?? item.id;
-            const blob = await this.store.getAudio(audioId);
-            const text = item.outputText ?? item.inputText ?? '';
-            const title = item.name?.trim() || this.getTextPreview(item) || 'Escriba';
-
-            // Intentar Web Share API (solo si está disponible)
-            if (typeof navigator.share === 'function') {
-                const shareData: ShareData = { title };
-
-                // Solo añadir archivo si canShare lo confirma
-                if (blob && blob.size > 0) {
-                    const ext = this.getExtension(item.mimeType);
-                    const file = new File([blob], `audio.${ext}`, { type: blob.type || 'audio/webm' });
-
-                    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
-                        shareData.files = [file];
-                    }
-                }
-
-                if (text.trim()) {
-                    shareData.text = text;
-                }
-
-                // Solo compartir si hay algo que compartir
-                if (shareData.files?.length || shareData.text) {
-                    await navigator.share(shareData);
-                    return 'shared';
-                }
-            }
-
-            // Fallback: copiar texto al portapapeles
-            if (text.trim() && typeof navigator.clipboard?.writeText === 'function') {
-                await navigator.clipboard.writeText(text);
-                return 'copied';
-            }
-
-            return 'nothing';
-        } catch (e) {
-            // Usuario canceló (AbortError) - no es un error real
-            if (e instanceof Error && e.name === 'AbortError') {
-                return 'nothing';
-            }
-            console.error('[HistoryDownloadService] Error compartiendo:', e);
-            return 'nothing';
+    async downloadAudio(item: HistoryItemModel): Promise<boolean> {
+        if (item.category === 'diarization') {
+            await this.downloadMixedAudio(item);
+            return true;
         }
+        if (item.audioId) {
+            const audio = await this.recorder.getAudio(item.audioId);
+            if (audio) {
+                this.downloadBlob(audio.blob, `audio_${item.name}.${audio.mimeType.split('/')[1] || 'webm'}`);
+                return true;
+            }
+        }
+        return false;
     }
 
-    private getTextPreview(item: HistoryItemModel): string {
-        const src = (item.outputText ?? item.inputText ?? '').trim();
-        return src.slice(0, 30);
+    async downloadText(item: HistoryItemModel): Promise<boolean> {
+        const content = item.outputText || item.inputText;
+        if (content) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            this.downloadBlob(blob, `${item.name}.txt`);
+            return true;
+        }
+        return false;
     }
 
-    private getExtension(mimeType?: string): string {
-        if (!mimeType) return 'webm';
-        if (mimeType.includes('wav')) return 'wav';
-        if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'mp3';
-        if (mimeType.includes('ogg')) return 'ogg';
-        if (mimeType.includes('mp4') || mimeType.includes('m4a')) return 'm4a';
-        return 'webm';
+    /**
+     * Intenta compartir usando Web Share API.
+     * Returns 'shared' si el navegador lo soporta y el usuario compartió,
+     * 'unsupported' si no se soporta (caller debe mostrar modal fallback),
+     * 'error' si no hay contenido.
+     */
+    async share(item: HistoryItemModel): Promise<'shared' | 'unsupported' | 'error'> {
+        const text = item.outputText || item.inputText;
+        if (!text) return 'error';
+
+        // Intentar Web Share API nativa
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: item.name || 'Escriba',
+                    text,
+                });
+                return 'shared';
+            } catch (e: any) {
+                // User cancelled share dialog
+                if (e?.name === 'AbortError') return 'shared';
+                // Share API failed, fallback
+                return 'unsupported';
+            }
+        }
+
+        // No soportada → caller muestra modal propio
+        return 'unsupported';
     }
 
-    private sanitizeFilename(name: string): string {
-        // Elimina caracteres prohibidos en Windows/Mac/Linux
-        return name
-            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .slice(0, 50) || 'archivo';
+    /** Obtener el texto compartible de un item */
+    getShareText(item: HistoryItemModel): string {
+        return item.outputText || item.inputText || '';
     }
 
-    private triggerDownload(blob: Blob, filename: string): void {
+    /** Obtener audio blob URL para reproducción */
+    async getAudioUrl(item: HistoryItemModel): Promise<string | null> {
+        if (item.audioId) {
+            const audio = await this.recorder.getAudio(item.audioId);
+            if (audio) {
+                return URL.createObjectURL(audio.blob);
+            }
+        }
+        return null;
+    }
+
+    downloadBlob(blob: Blob, filename: string) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        // Pequeño delay para asegurar que el navegador procese la descarga
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        URL.revokeObjectURL(url);
     }
 }

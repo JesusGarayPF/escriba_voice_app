@@ -1,0 +1,39 @@
+<div class="overlay" *ngIf="open" (click)="onBackdropClick()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="header">
+            <div class="title">{{ title }}</div>
+        </div>
+
+        <div class="body">
+            <div class="preview">{{ text.length > 120 ? text.slice(0, 120) + '…' : text }}</div>
+
+            <div class="share-grid">
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onCopy()">
+                    <span class="share-icon">{{ copied ? '✓' : '📋' }}</span>
+                    <span class="share-label">{{ copied ? 'Copiado' : 'Copiar' }}</span>
+                </button>
+
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onEmail()">
+                    <span class="share-icon">✉️</span>
+                    <span class="share-label">Email</span>
+                </button>
+
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onWhatsApp()">
+                    <span class="share-icon">💬</span>
+                    <span class="share-label">WhatsApp</span>
+                </button>
+
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onTelegram()">
+                    <span class="share-icon">✈️</span>
+                    <span class="share-label">Telegram</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="btn btn-reset kbd-focus" type="button" (click)="onBackdropClick()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>

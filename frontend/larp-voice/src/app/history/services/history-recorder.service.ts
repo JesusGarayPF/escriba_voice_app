@@ -81,35 +81,58 @@ export class HistoryRecorderService {
   /**
    * Guarda un resultado de diarización (conversación) en el historial.
    */
+  /**
+   * Guarda un resultado de diarización (conversación) en el historial.
+   */
   async recordDiarization(params: {
     combinedText: string;
     startTime: number;
     durationMs: number;
     speakers: string[]; // Lista de nombres de participantes
+    audioBlobs?: Map<string, Blob>; // Mapa Nombre -> Blob
   }): Promise<string | null> {
     if (!params.combinedText.trim()) return null;
 
     try {
       const id = crypto.randomUUID();
+      const participantAudioIds: Record<string, string> = {};
+
+      // Guardar audios individuales si existen
+      if (params.audioBlobs) {
+        for (const [speaker, blob] of params.audioBlobs.entries()) {
+          const audioId = crypto.randomUUID();
+          await this.store.putAudio(audioId, blob, blob.type || 'audio/webm');
+          participantAudioIds[speaker] = audioId;
+        }
+      }
+
       const item: HistoryItemModel = {
         id,
         category: 'diarization',
         createdAt: params.startTime,
         name: `Conversación (${params.speakers.length} personas)`, // Nombre sugerido
         durationMs: params.durationMs,
-        sizeBytes: 0, // Por ahora no guardamos el audio combinado (costoso de generar en frontend)
+        sizeBytes: 0, // Tamaño recalculable o suma
         outputText: params.combinedText,
-        // audioId: null, // Sin audio combinado por ahora
+        // audioId: null, // Sin audio combinado único
         mimeType: 'text/plain',
+        participantAudioIds: Object.keys(participantAudioIds).length > 0 ? participantAudioIds : undefined
       };
-
-      // TODO: En el futuro, podríamos generar un ZIP con los audios o mezclarlos
-      // Por ahora, solo guardamos el texto transcrito.
 
       await this.store.upsertItem(item);
       return id;
     } catch (e) {
       console.error('[HistoryRecorderService] Error guardando Diarización:', e);
+      return null;
+    }
+  }
+  async getAudio(id: string): Promise<{ blob: Blob; mimeType: string } | null> {
+    try {
+      const blob = await this.store.getAudio(id);
+      if (!blob) return null;
+      return { blob, mimeType: blob.type };
+    } catch (e) {
+      console.error('[HistoryRecorderService] Error recuperando audio:', e);
       return null;
     }
   }

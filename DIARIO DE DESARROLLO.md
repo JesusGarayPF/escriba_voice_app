@@ -733,3 +733,184 @@
 -   **Próximo paso recomendado (máximo 3 bullets)**
     -   Refinar la persistencia de audio combinado (actualmente solo se guarda texto).
     -   Optimizar la transferencia de datos P2P para sesiones largas.
+
+* * * * *
+
+**Día 12/02/2026**
+
+**1) Resumen ejecutivo**
+
+-   Se extendió la persistencia para soportar audios múltiples (blobs por participante) en IndexedDB.
+-   Se implementó un sistema de **Contexto / Palabras Clave** que permite alimentar a Whisper con prompts para mejorar el vocabulario técnico.
+-   Se añadió un motor de **Fuzzy Match** para corregir automáticamente errores fonéticos en la transcripción basados en el contexto.
+-   Se habilitó el **Modo Offline de Pruebas** permitiendo procesar archivos de audio locales sin necesidad de una sesión en vivo.
+-   Se creó el endpoint de backend `/mix` (basado en `ffmpeg`) para generar una pista MP3 combinada de todos los participantes.
+-   Se refinó la UI del Historial, eliminando previews innecesarias y unificando botones de descarga con iconos intuitivos (🎵 para audio, 📄 para texto).
+-   Se reestructuró el Lobby del Host para acomodar la caja de contexto de forma más ergonómica.
+
+**2) Decisiones y razonamiento (énfasis fuerte)**
+
+-   **Decisión:** Implementar corrección **Fuzzy Match** en cliente tras la transcripción.
+    -   **Motivo:** Whisper a veces alucina o confunde términos específicos (ej. "Aeldari" -> "Eldari"). Al tener una lista de "Palabras Clave" proporcionadas por el usuario, podemos buscar coincidencias fonéticas/de escritura cercanas (Levenshtein) y forzar el término correcto.
+    -   **Alternativas consideradas:** Re-entrenar modelos (inviable offline/rápido) o confiar solo en Whisper prompts.
+    -   **Consecuencias:** Mejora drástica en la calidad de transcripciones técnicas para juegos de rol sin carga extra en el servidor.
+
+-   **Decisión:** Crear un endpoint de **Mezcla (`/mix`)** en el backend en lugar de mezclar en navegador.
+    -   **Motivo:** Aunque la Web Audio API permite mezclar, el proceso de encoding a MP3/WAV de múltiples canales largos es más estable y rápido usando `ffmpeg` nativo. Además, permite centralizar el post-procesamiento.
+    -   **Consecuencias:** Se requiere `ffmpeg` en el servidor (ya era requisito para STT).
+
+-   **Decisión:** Eliminar la previsualización del texto en el Historial de Diarización.
+    -   **Motivo:** En sesiones largas (6h+), el preview generaba un scroll infinito e impracticable. El usuario prefiere una lista limpia donde la descarga sea la acción principal.
+    -   **Consecuencias:** Interfaz mucho más profesional y útil para gestionar decenas de grabaciones.
+
+-   **Decisión:** Mover la caja de **Contexto** en el Lobby debajo de los participantes pero sobre los botones.
+    -   **Motivo:** El flujo visual debe ser: ver quién está -> establecer de qué vamos a hablar -> grabar/procesar. Meterlo dentro de la barra de botones saturaba la fila.
+
+**3) Cambios de arquitectura / estructura del proyecto**
+
+-   **Backend:**
+    -   Nuevo archivo `src/mix.ts` para orquestar la mezcla de audios vía child process.
+    -   Se añadió la dependencia `uuid` para gestionar nombres de archivos temporales únicos durante la mezcla.
+-   **Frontend:**
+    -   `HistoryDownloadService`: Ahora soporta flujos diferenciados para `downloadAudio` y `downloadText`.
+    -   `HistoryRecorderService`: Añadido método `getAudio(id)` para facilitar la recuperación de blobs desde IndexedDB.
+-   **Nuevas Reglas:**
+    -   Toda descarga de audio mezclado debe pasar por el backend para asegurar formato MP3 estándar.
+
+**4) Cambios funcionales (features)**
+
+-   **Añadidas:**
+    -   **Descarga de Audio Combinado**: Botón 🎵 en historial para bajar la sesión completa mezclada.
+    -   **Fuzzy Matching**: Corrección automática de texto basada en palabras clave del lobby.
+    -   **Carga de Archivos local**: Icono 📂 en lobby para debugguear el motor con audios pre-grabados.
+    -   **Pistas por Hablante**: El sistema ahora guarda internamente el audio de cada persona por separado, permitiendo futuras ediciones multicanal.
+
+-   **Modificadas:**
+    -   **Lobby UI**: Layout más espacioso para el Host.
+    -   **History UI**: Lista compacta, iconos descriptivos en lugar de botones con texto largo.
+
+**5) Problemas y cómo se resolvieron (con causas)**
+
+-   **Síntoma:** Error `TS2532: Object is possibly 'undefined'` en `mix.ts`.
+    -   **Causa raíz:** TypeScript no podía asegurar que `req.files[0]` existiera tras el middleware de multer.
+    -   **Solución aplicada:** Añadir Non-null assertion operator (`!`) tras validar el `length` del array.
+    -   **Verificación:** El backend compila correctamente con `npm run dev`.
+
+-   **Síntoma:** Error `NG5002: Unexpected closing tag 'div'` en `history.page.html`.
+    -   **Causa raíz:** Estructura DOM rota durante la refactorización (etiquetas `li` y `div` cruzadas).
+    -   **Solución aplicada:** Reescritura total del archivo con sangría verificada y cierre de bloques `left/right` estricto.
+    -   **Verificación:** El frontend compila sin errores de plantilla.
+
+-   **Síntoma:** Whisper no aplicaba el contexto/prompt.
+    -   **Causa raíz:** El frontend no estaba pasando el flag `--initial-prompt` al backend adecuadamente.
+    -   **Solución aplicada:** Actualizar `DiarizationService` para incluir el prompt en la query string y el backend para capturarlo y pasarlo al spawn de Whisper.
+
+**6) Tareas realizadas (checklist)**
+
+-   [x] Endpoint `/mix` con ffmpeg `amix`.
+-   [x] Lógica de descarga de audio mezclado en `HistoryDownloadService`.
+-   [x] Implementar algoritmos de Fuzzy Match para limpieza de texto.
+-   [x] Soporte en IndexedDB para múltiples audios por item.
+-   [x] Rediseño compacto de `HistoryPage`.
+-   [x] Reubicación de `ContextBox` en el Lobby.
+
+**7) Estado del proyecto al final del día**
+
+-   **Qué funciona**
+    -   Diarización con contexto y corrección automática de errores.
+    -   Mezcla de audio en servidor y descarga MP3.
+    -   Procesamiento de archivos externos (Testing Offline).
+-   **Qué falta**
+    -   Integración de LLM Local (Ollama) para resúmenes automáticos.
+    -   Vúmetros/Indicadores de audio en tiempo real en el Lobby.
+-   **Bloqueos / riesgos**
+    -   Riesgo de almacenamiento en IndexedDB: Si las sesiones son de 6h, el tamaño de los blobs podría superar los límites de cuota persistente del navegador en algunos dispositivos móviles.
+    -   **Próximo paso recomendado:** Iniciar la Fase 8 (Resúmenes con Ollama).
+
+* * * * *
+
+**Día 15/02/2026**
+
+**1) Resumen ejecutivo**
+
+-   Se implementó un **sistema de compartir** con Web Share API nativa (móvil) y un **modal propio** como fallback (desktop), con opciones para Copiar, Email, WhatsApp y Telegram.
+-   Se creó la **página Preview** (`/preview/:id`) que permite ver, editar y guardar transcripciones directamente desde el historial, con reproductor de audio integrado.
+-   Se mejoró la UX del Lobby: al hacer **un solo clic** en el input del código de sala, el portapapeles se lee automáticamente y rellena el campo si contiene un código válido de 6 caracteres.
+
+**2) Decisiones y razonamiento (énfasis fuerte)**
+
+-   **Decisión:** Usar **Web Share API** como estrategia principal de compartir, con modal propio como fallback.
+    -   **Motivo:** La Web Share API delega al sistema operativo la presentación de opciones (WhatsApp, Telegram, Instagram, email, etc.), lo que da la mejor UX nativa en móviles sin necesidad de mantener una lista de apps.
+    -   **Alternativas consideradas:** Modal propio siempre (descartado por redundancia con la UI nativa del SO), o solo copiar al portapapeles (insuficiente).
+    -   **Consecuencias:** En desktop sin soporte de Share API, se muestra un `ShareModalComponent` estilizado que mantiene la estética dark del proyecto.
+
+-   **Decisión:** Hacer las transcripciones **editables** directamente en la página Preview.
+    -   **Motivo:** Whisper comete errores frecuentes (nombres propios, jerga de juegos de rol). El usuario necesita poder corregir el texto sin salir de la app ni descargar el archivo.
+    -   **Alternativas consideradas:** Solo lectura con botón de descarga (limitante) o edición inline en el historial (demasiado pequeño para textos largos).
+    -   **Consecuencias:** El `upsertItem()` del store se usa para persistir cambios; cualquier edición se guarda directamente en IndexedDB.
+
+-   **Decisión:** Leer el portapapeles automáticamente en el **evento `focus`** del input del código de sala.
+    -   **Motivo:** El evento `focus` cuenta como gesto de usuario para la Clipboard API en la mayoría de navegadores, eliminando la necesidad de un botón específico de "Pegar".
+    -   **Alternativas consideradas:** Button onClick + focus programático (lo que teníamos; requería 2 clics). Permissions API (inconsistente entre navegadores).
+    -   **Consecuencias:** Un clic = pegado automático si el campo está vacío y el portapapeles contiene 6 caracteres. Se mantiene el botón 📋 como alternativa visual.
+
+**3) Cambios de arquitectura / estructura del proyecto**
+
+-   **Nuevos componentes:**
+    -   `ShareModalComponent` (`components/shared/shareModal/`) — Modal reutilizable con grid de acciones de compartir (Copiar, Email, WhatsApp, Telegram).
+    -   `PreviewPage` (`history/pages/preview/`) — Página completa con editor de texto, reproductor de audio, descarga y compartir.
+-   **Servicios modificados:**
+    -   `HistoryDownloadService`: Método `share()` ahora retorna `'shared' | 'unsupported' | 'error'` para permitir al caller decidir si abrir el modal. Nuevos métodos públicos: `getShareText()`, `getAudioUrl()`, `downloadBlob()`.
+-   **Rutas:**
+    -   Nueva ruta `/preview/:id` en `app.routes.ts`.
+
+**4) Cambios funcionales (features)**
+
+-   **Añadidas:**
+    -   **Compartir nativo**: Botón ⤴ en historial usa Web Share API en dispositivos compatibles.
+    -   **Modal de compartir**: Fallback con opciones Copiar, Email, WhatsApp, Telegram, manteniendo estética dark del proyecto.
+    -   **Preview de items**: Botón 👁 en cada item del historial abre `/preview/:id` con texto completo editable.
+    -   **Edición de transcripciones**: Textarea editable + botón "Guardar cambios" que persiste en IndexedDB.
+    -   **Descarga desde Preview**: Botones de descarga de texto y audio directamente desde la vista previa.
+    -   **Auto-paste en Lobby**: Clic en el input del código de sala lee el portapapeles automáticamente.
+
+-   **Modificadas:**
+    -   `HistoryPage`: Integración del `ShareModalComponent` y nuevo botón 👁 de preview.
+    -   `LobbyPage`: Simplificación del flujo de pegado (de 2 clics a 1).
+
+**5) Problemas y cómo se resolvieron (con causas)**
+
+-   **Síntoma:** Error de compilación: `Property 'category' is missing in type` al buscar items en PreviewPage.
+    -   **Causa raíz:** El contrato `HistoryListQuery` requiere `category` obligatoriamente, pero la Preview necesita buscar un item por ID sin conocer su categoría a priori.
+    -   **Solución aplicada:** Iterar sobre las 4 categorías (`stt`, `tts`, `diarization`, `summaries`) buscando el ID en cada una, con `break` en cuanto se encuentra.
+    -   **Verificación:** `ng build` compila sin errores (exit code 0).
+
+**6) Tareas realizadas (checklist)**
+
+-   [x] Crear `ShareModalComponent` (TS/HTML/CSS) con opciones Copiar, Email, WhatsApp, Telegram.
+-   [x] Reescribir `share()` en `HistoryDownloadService` para usar Web Share API + fallback.
+-   [x] Integrar modal de compartir en `HistoryPage`.
+-   [x] Crear `PreviewPage` (TS/HTML/CSS) con textarea editable + reproductor de audio.
+-   [x] Registrar ruta `/preview/:id` en `app.routes.ts`.
+-   [x] Añadir botón 👁 en historial para abrir preview.
+-   [x] Implementar `onCodeInputFocus()` en Lobby para auto-paste.
+-   [x] Añadir binding `(focus)` en el input del código de sala.
+
+**7) Estado del proyecto al final del día**
+
+-   **Qué funciona**
+    -   Compartir texto vía Web Share API (móvil) o modal propio (desktop).
+    -   Vista previa con edición y guardado de transcripciones.
+    -   Descarga de texto y audio desde la página preview.
+    -   Pegado de código de sala con un solo clic.
+-   **Qué falta**
+    -   Integración de LLM Local (Ollama) para resúmenes automáticos.
+    -   Vúmetros/Indicadores de audio en tiempo real en el Lobby.
+    -   Soporte para compartir archivos de audio (solo texto por ahora).
+-   **Bloqueos / riesgos**
+    -   La Clipboard API puede requerir permisos explícitos en algunos navegadores (Firefox pide confirmación al leer).
+    -   La búsqueda por ID en Preview itera 4 queries a IndexedDB; si el historial crece mucho podría ser lento (mitigable con un índice por ID en el futuro).
+-   **Próximo paso recomendado (máximo 3 bullets)**
+    -   Iniciar la Fase 8 (Resúmenes con LLM / Ollama).
+    -   Añadir opción de compartir archivos de audio adjuntos (Web Share API soporta `files`).
+    -   Considerar añadir un `getById()` al contrato `HistoryStore` para optimizar la carga en Preview.

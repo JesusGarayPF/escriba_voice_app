@@ -7,6 +7,8 @@ import path from 'path';
 import sttRouter from './stt';
 import ttsRouter from './tts';
 
+import mixRouter from './mix';
+
 const app = express();
 
 app.use(helmet());
@@ -17,6 +19,7 @@ app.use(express.json({ limit: '5mb' }));
 // Rutas principales
 app.use('/stt', sttRouter);
 app.use('/tts', ttsRouter);
+app.use('/mix', mixRouter);
 
 // Opción: servir estáticos de debug (no imprescindible)
 app.use('/static', express.static(path.resolve(__dirname, '../uploads')));

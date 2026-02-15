@@ -6,6 +6,7 @@ import { TopNavBarComponent } from '../../components/layout/topNavBar/top-nav-ba
 import { RightDrawerComponent } from '../../components/layout/rightDrawer/right-drawer.component';
 import { ProfilePanelComponent } from '../../components/layout/panels/profile/profile.component';
 import { SettingsPanelComponent } from '../../components/layout/panels/settings/settings.component';
+import { ShareModalComponent } from '../../components/shared/shareModal/share-modal.component';
 
 import { type HistoryCategory } from '../contracts/history-category';
 import { HISTORY_STORE } from '../contracts/history-store.token';
@@ -32,6 +33,7 @@ const CATEGORY_LABEL: Record<HistoryCategory, string> = {
     RightDrawerComponent,
     ProfilePanelComponent,
     SettingsPanelComponent,
+    ShareModalComponent,
   ],
   templateUrl: './history.page.html',
   styleUrl: './history.page.css',
@@ -61,6 +63,11 @@ export class HistoryPage implements OnInit, OnDestroy {
   // --- Edición inline del nombre ---
   editingId: string | null = null;
   draftName = '';
+
+  // --- Share modal state ---
+  shareModalOpen = false;
+  shareModalTitle = '';
+  shareModalText = '';
 
   constructor(
     private router: Router,
@@ -144,10 +151,6 @@ export class HistoryPage implements OnInit, OnDestroy {
         limit: 200,
         offset: 0,
       });
-
-      // si lo preferís, aquí podrías ordenar por fecha desc
-      // this.items = [...this.items].sort((a,b)=> (b.createdAt ?? 0) - (a.createdAt ?? 0));
-
     } catch (e) {
       this.errorMsg = e instanceof Error ? e.message : 'Error cargando historial';
       this.items = [];
@@ -230,7 +233,7 @@ export class HistoryPage implements OnInit, OnDestroy {
 
     const ok = await this.confirm.ask({
       title: 'Borrar item',
-      text: `¿Borrar “${this.displayName(it)}”?`,
+      text: `¿Borrar "${this.displayName(it)}"?`,
       confirmText: 'Borrar',
       cancelText: 'Cancelar',
       variant: 'danger',
@@ -255,22 +258,46 @@ export class HistoryPage implements OnInit, OnDestroy {
     }
   }
 
-  async download(it: HistoryItemModel): Promise<void> {
-    const ok = await this.downloadService.download(it);
-    if (!ok) {
-      this.errorMsg = 'No hay contenido para descargar';
-      this.cdr.detectChanges();
-    }
+  async downloadText(it: HistoryItemModel): Promise<void> {
+    const ok = await this.downloadService.downloadText(it);
+    if (!ok) this.showNoContentError();
+  }
+
+  async downloadAudio(it: HistoryItemModel): Promise<void> {
+    const ok = await this.downloadService.downloadAudio(it);
+    if (!ok) this.showNoContentError();
+  }
+
+  private showNoContentError() {
+    this.errorMsg = 'No hay contenido para descargar';
+    this.cdr.detectChanges();
+    setTimeout(() => { this.errorMsg = ''; this.cdr.detectChanges(); }, 2000);
   }
 
   async share(it: HistoryItemModel): Promise<void> {
     const result = await this.downloadService.share(it);
-    if (result === 'copied') {
-      // Feedback visual opcional
-      console.log('Texto copiado al portapapeles');
+    if (result === 'shared') {
+      // Nada, lo hizo el SO
+    } else if (result === 'unsupported') {
+      // Abrir modal propio
+      this.shareModalTitle = this.displayName(it);
+      this.shareModalText = this.downloadService.getShareText(it);
+      this.shareModalOpen = true;
+      this.cdr.detectChanges();
+    } else {
+      this.showNoContentError();
     }
   }
 
+  onShareAction() {
+    this.shareModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  // --- Preview ---
+  openPreview(it: HistoryItemModel) {
+    this.router.navigate(['/preview', it.id]);
+  }
 
   // --- Scroll lock helpers ---
   private syncScrollLock() {

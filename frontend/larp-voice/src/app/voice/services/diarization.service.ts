@@ -31,25 +31,41 @@ export class DiarizationService {
     private recorder = inject(HistoryRecorderService);
     private http = inject(HttpClient);
 
-    async processSessionAndSave(): Promise<boolean> {
+    async processSessionAndSave(prompt: string = ''): Promise<boolean> {
         const recordings = this.session.getAllRecordedBlobs();
         if (recordings.length === 0) {
             console.warn('No hay grabaciones para procesar');
             return false;
         }
+        return this.processBlobsAndSave(recordings, prompt);
+    }
 
+    async processFileAndSave(file: File, prompt: string = ''): Promise<boolean> {
+        // Simular structura de grabación
+        const recordings = [{
+            name: 'Archivo Importado',
+            blobs: [file as Blob]
+        }];
+        return this.processBlobsAndSave(recordings, prompt);
+    }
+
+    private async processBlobsAndSave(recordings: { name: string, blobs: Blob[] }[], prompt: string): Promise<boolean> {
         const segments: ProcessedSegment[] = [];
         const speakerNames: string[] = [];
+        const audioBlobs = new Map<string, Blob>();
 
         // 2. Procesar cada canal
         for (const rec of recordings) {
             speakerNames.push(rec.name);
             const fullBlob = new Blob(rec.blobs, { type: 'audio/webm' });
+            // Nota: Si viene un MP3/WAV, el Blob type será ese, pero Whisper backend lo maneja via ffmpeg 
+            // siempre y cuando el backend acepte el mime type o ffmpeg lo detecte.
+            // Para asegurar, pasaremos el blob tal cual.
+            audioBlobs.set(rec.name, fullBlob);
 
             try {
-                const json = await this.transcribeWithSegments(fullBlob);
+                const json = await this.transcribeWithSegments(fullBlob, prompt);
 
-                // Estrategia 1: Formato 'segments' (Whisper original / openai)
                 if (json.segments) {
                     json.segments.forEach(seg => {
                         segments.push({
@@ -59,14 +75,10 @@ export class DiarizationService {
                             text: seg.text.trim()
                         });
                     });
-                }
-                // Estrategia 2: Formato 'transcription' (whisper.cpp -oj)
-                else if (json.transcription) {
+                } else if (json.transcription) {
                     json.transcription.forEach(item => {
-                        // Offsets puede no venir, usamos timestamps
                         let start = 0;
                         let end = 0;
-
                         if (item.offsets) {
                             start = item.offsets.from;
                             end = item.offsets.to;
@@ -74,7 +86,6 @@ export class DiarizationService {
                             start = this.parseTime(item.timestamps.from);
                             end = this.parseTime(item.timestamps.to);
                         }
-
                         segments.push({
                             speaker: rec.name,
                             startMs: start,
@@ -90,22 +101,33 @@ export class DiarizationService {
             }
         }
 
-        // 3. Ordenar y guardar
+        // 3. Ordenar, Fusionar y Corregir
         if (segments.length > 0) {
             segments.sort((a, b) => a.startMs - b.startMs);
+
+            // Fusión inteligente
+            const mergedSegments = this.smartMergeSegments(segments);
 
             const lastSeg = segments[segments.length - 1];
             const durationMs = lastSeg ? lastSeg.endMs : 0;
 
-            const combinedText = segments
-                .map(s => `[${this.formatTime(s.startMs)}] ${s.speaker}: ${s.text}`)
-                .join('\n');
+            const combinedText = mergedSegments
+                .map(s => {
+                    // Corrección ortográfica contextual
+                    let finalText = s.text;
+                    if (prompt) {
+                        finalText = this.applyKeywordCorrection(finalText, prompt);
+                    }
+                    return `${s.speaker}: ${finalText}`;
+                })
+                .join('\n\n');
 
             await this.recorder.recordDiarization({
                 combinedText,
-                startTime: Date.now() - durationMs, // Estimado
+                startTime: Date.now() - durationMs,
                 durationMs,
-                speakers: speakerNames
+                speakers: speakerNames,
+                audioBlobs: audioBlobs
             });
             console.log('Diarización guardada con éxito.');
             return true;
@@ -141,9 +163,12 @@ export class DiarizationService {
         }
     }
 
-    private async transcribeWithSegments(blob: Blob): Promise<WhisperJson> {
+    private async transcribeWithSegments(blob: Blob, prompt: string): Promise<WhisperJson> {
         const formData = new FormData();
         formData.append('audio', blob);
+        if (prompt) {
+            formData.append('prompt', prompt);
+        }
 
         console.log(`[Diarization] Enviando blob de ${blob.size} bytes a STT...`);
         // Usar responseType 'json' es default en HttpClient
@@ -164,5 +189,79 @@ export class DiarizationService {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
         return `${m}m ${s}s`;
+    }
+
+    private smartMergeSegments(segments: ProcessedSegment[]): ProcessedSegment[] {
+        if (segments.length === 0) return [];
+
+        const merged: ProcessedSegment[] = [];
+        let current = { ...segments[0] };
+
+        for (let i = 1; i < segments.length; i++) {
+            const next = segments[i];
+            const silenceGap = next.startMs - current.endMs;
+
+            if (next.speaker === current.speaker && silenceGap < 3000) {
+                current.endMs = next.endMs;
+                const sep = current.text.match(/[.!?]$/) ? ' ' : ' ';
+                current.text += sep + next.text;
+            } else {
+                merged.push(current);
+                current = { ...next };
+            }
+        }
+        merged.push(current);
+        return merged;
+    }
+
+    private applyKeywordCorrection(text: string, prompt: string): string {
+        if (!prompt || !text) return text;
+
+        const keywords = prompt.split(/[,;\n]+/).map(k => k.trim()).filter(k => k.length > 3);
+        if (keywords.length === 0) return text;
+
+        const words = text.split(/\s+/);
+
+        const correctedWords = words.map(word => {
+            const cleanWord = word.replace(/[.,!?;:()"]/g, '');
+            if (cleanWord.length < 3) return word;
+
+            for (const key of keywords) {
+                if (Math.abs(cleanWord.length - key.length) > 2) continue;
+
+                const dist = this.levenshteinDistance(cleanWord.toLowerCase(), key.toLowerCase());
+                const maxLength = Math.max(cleanWord.length, key.length);
+                const similarity = 1 - (dist / maxLength);
+
+                if (similarity >= 0.8 || (dist <= 1 && maxLength >= 4)) {
+                    // Reconstruir preservando puntuacion a derecha/izquierda si es simple
+                    if (word === cleanWord) return key;
+                    return word.replace(cleanWord, key);
+                }
+            }
+            return word;
+        });
+
+        return correctedWords.join(' ');
+    }
+
+    private levenshteinDistance(a: string, b: string): number {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
     }
 }

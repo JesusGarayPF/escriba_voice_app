@@ -47,7 +47,7 @@
                     <label>Código de Sala</label>
                     <div class="input-with-action">
                         <input #joinInput type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######"
-                            maxlength="6" />
+                            maxlength="6" (focus)="onCodeInputFocus()" />
                         <button class="btn-icon" (click)="pasteCode()" title="Pegar del portapapeles">
                             📋
                         </button>
@@ -114,16 +114,31 @@
             </ul>
         </div>
 
+        <!-- Contexto para Host (Movido fuera de controls) -->
+        <div class="context-box" *ngIf="session.isHost() && !audio.isRecording()"
+            style="margin-top: 15px; margin-bottom: 15px;">
+            <label>Contexto / Palabras Clave</label>
+            <textarea [(ngModel)]="transcriptionPrompt" placeholder="Ej: Warhammer 40k, Aeldari, Torbellino..."
+                rows="2"></textarea>
+        </div>
+
         <div class="controls-bar">
+            <!-- Acción Host: Cargar Archivo (Icono pequeño para ahorrar espacio) -->
+            <button class="btn-icon-large"
+                *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length === 0"
+                (click)="triggerFileUpload()" [disabled]="isProcessing" title="Cargar Audio Grabado (Debug)">
+                📂
+            </button>
+
             <button class="btn btn-danger" (click)="leave()" [disabled]="audio.isRecording()">
-                Abandonar Sala
+                Abandonar
             </button>
 
             <!-- Acción Host: Procesar -->
             <button class="btn btn-primary"
                 *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length > 0"
                 (click)="finishAndProcess()" [disabled]="isProcessing">
-                💾 Procesar y Guardar
+                💾 Procesar
             </button>
 
             <!-- Acción Host: Grabar -->

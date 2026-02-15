@@ -47579,11 +47579,22 @@ var HistoryRecorderService = class _HistoryRecorderService {
   /**
    * Guarda un resultado de diarización (conversación) en el historial.
    */
+  /**
+   * Guarda un resultado de diarización (conversación) en el historial.
+   */
   async recordDiarization(params) {
     if (!params.combinedText.trim())
       return null;
     try {
       const id = crypto.randomUUID();
+      const participantAudioIds = {};
+      if (params.audioBlobs) {
+        for (const [speaker, blob] of params.audioBlobs.entries()) {
+          const audioId = crypto.randomUUID();
+          await this.store.putAudio(audioId, blob, blob.type || "audio/webm");
+          participantAudioIds[speaker] = audioId;
+        }
+      }
       const item = {
         id,
         category: "diarization",
@@ -47592,15 +47603,27 @@ var HistoryRecorderService = class _HistoryRecorderService {
         // Nombre sugerido
         durationMs: params.durationMs,
         sizeBytes: 0,
-        // Por ahora no guardamos el audio combinado (costoso de generar en frontend)
+        // Tamaño recalculable o suma
         outputText: params.combinedText,
-        // audioId: null, // Sin audio combinado por ahora
-        mimeType: "text/plain"
+        // audioId: null, // Sin audio combinado único
+        mimeType: "text/plain",
+        participantAudioIds: Object.keys(participantAudioIds).length > 0 ? participantAudioIds : void 0
       };
       await this.store.upsertItem(item);
       return id;
     } catch (e) {
       console.error("[HistoryRecorderService] Error guardando Diarizaci\xF3n:", e);
+      return null;
+    }
+  }
+  async getAudio(id) {
+    try {
+      const blob = await this.store.getAudio(id);
+      if (!blob)
+        return null;
+      return { blob, mimeType: blob.type };
+    } catch (e) {
+      console.error("[HistoryRecorderService] Error recuperando audio:", e);
       return null;
     }
   }
@@ -48323,6 +48346,214 @@ var TtsComponent = class _TtsComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TtsComponent, { className: "TtsComponent", filePath: "src/app/voice/ui/tts/tts.component.ts", lineNumber: 42 });
 })();
 
+// src/app/components/shared/shareModal/share-modal.component.ts
+function ShareModalComponent_div_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 1);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_div_click_0_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onBackdropClick());
+    });
+    \u0275\u0275elementStart(1, "div", 2);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_div_click_1_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      return \u0275\u0275resetView($event.stopPropagation());
+    });
+    \u0275\u0275elementStart(2, "div", 3)(3, "div", 4);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(5, "div", 5)(6, "div", 6);
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "div", 7)(9, "button", 8);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_button_click_9_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onCopy());
+    });
+    \u0275\u0275elementStart(10, "span", 9);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "span", 10);
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(14, "button", 8);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_button_click_14_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onEmail());
+    });
+    \u0275\u0275elementStart(15, "span", 9);
+    \u0275\u0275text(16, "\u2709\uFE0F");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(17, "span", 10);
+    \u0275\u0275text(18, "Email");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(19, "button", 8);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_button_click_19_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onWhatsApp());
+    });
+    \u0275\u0275elementStart(20, "span", 9);
+    \u0275\u0275text(21, "\u{1F4AC}");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(22, "span", 10);
+    \u0275\u0275text(23, "WhatsApp");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(24, "button", 8);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_button_click_24_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onTelegram());
+    });
+    \u0275\u0275elementStart(25, "span", 9);
+    \u0275\u0275text(26, "\u2708\uFE0F");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(27, "span", 10);
+    \u0275\u0275text(28, "Telegram");
+    \u0275\u0275elementEnd()()()();
+    \u0275\u0275elementStart(29, "div", 11)(30, "button", 12);
+    \u0275\u0275listener("click", function ShareModalComponent_div_0_Template_button_click_30_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onBackdropClick());
+    });
+    \u0275\u0275text(31, " Cerrar ");
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.title);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r1.text.length > 120 ? ctx_r1.text.slice(0, 120) + "\u2026" : ctx_r1.text);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(ctx_r1.copied ? "\u2713" : "\u{1F4CB}");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.copied ? "Copiado" : "Copiar");
+  }
+}
+var ShareModalComponent = class _ShareModalComponent {
+  open = false;
+  title = "Compartir";
+  text = "";
+  action = new EventEmitter();
+  copied = false;
+  onBackdropClick() {
+    this.action.emit("dismiss");
+  }
+  async onCopy() {
+    try {
+      await navigator.clipboard.writeText(this.text);
+      this.copied = true;
+      setTimeout(() => {
+        this.copied = false;
+        this.action.emit("copy");
+      }, 1200);
+    } catch {
+      this.action.emit("copy");
+    }
+  }
+  onEmail() {
+    const subject = encodeURIComponent(this.title);
+    const body = encodeURIComponent(this.text);
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+    this.action.emit("email");
+  }
+  onWhatsApp() {
+    const encoded = encodeURIComponent(this.text);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    this.action.emit("dismiss");
+  }
+  onTelegram() {
+    const encoded = encodeURIComponent(this.text);
+    window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+    this.action.emit("dismiss");
+  }
+  onEsc() {
+    if (this.open)
+      this.action.emit("dismiss");
+  }
+  static \u0275fac = function ShareModalComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ShareModalComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ShareModalComponent, selectors: [["app-share-modal"]], hostBindings: function ShareModalComponent_HostBindings(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275listener("keydown.escape", function ShareModalComponent_keydown_escape_HostBindingHandler() {
+        return ctx.onEsc();
+      }, \u0275\u0275resolveDocument);
+    }
+  }, inputs: { open: "open", title: "title", text: "text" }, outputs: { action: "action" }, decls: 1, vars: 1, consts: [["class", "overlay", 3, "click", 4, "ngIf"], [1, "overlay", 3, "click"], ["role", "dialog", "aria-modal", "true", 1, "modal", 3, "click"], [1, "header"], [1, "title"], [1, "body"], [1, "preview"], [1, "share-grid"], ["type", "button", 1, "share-btn", "btn-reset", "kbd-focus", 3, "click"], [1, "share-icon"], [1, "share-label"], [1, "footer"], ["type", "button", 1, "btn", "btn-reset", "kbd-focus", 3, "click"]], template: function ShareModalComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275template(0, ShareModalComponent_div_0_Template, 32, 4, "div", 0);
+    }
+    if (rf & 2) {
+      \u0275\u0275property("ngIf", ctx.open);
+    }
+  }, dependencies: [CommonModule, NgIf], styles: ["\n\n.overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, .55);\n  display: grid;\n  place-items: center;\n  z-index: 1000;\n}\n.modal[_ngcontent-%COMP%] {\n  width: min(420px, calc(100vw - 32px));\n  border-radius: 14px;\n  border: 1px solid rgba(255, 255, 255, .10);\n  background: rgba(18, 18, 18, .96);\n  box-shadow: 0 18px 60px rgba(0, 0, 0, .55);\n  padding: 16px;\n}\n.header[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  font-size: 16px;\n  font-weight: 700;\n  margin-bottom: 10px;\n}\n.body[_ngcontent-%COMP%]   .preview[_ngcontent-%COMP%] {\n  opacity: .72;\n  font-size: 13px;\n  line-height: 1.35;\n  white-space: pre-wrap;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .25);\n  margin-bottom: 16px;\n  max-height: 80px;\n  overflow: hidden;\n}\n.share-grid[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 10px;\n}\n.share-btn[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 6px;\n  padding: 14px 8px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  cursor: pointer;\n  transition: all .15s ease;\n}\n.share-btn[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n  background: rgba(255, 255, 255, .06);\n}\n.share-icon[_ngcontent-%COMP%] {\n  font-size: 22px;\n  line-height: 1;\n}\n.share-label[_ngcontent-%COMP%] {\n  font-size: 11px;\n  opacity: .85;\n}\n.footer[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 14px;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(255, 255, 255, .14);\n  background: rgba(255, 255, 255, .06);\n}\n.btn[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 255, 255, .10);\n}\n/*# sourceMappingURL=share-modal.component.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ShareModalComponent, [{
+    type: Component,
+    args: [{ selector: "app-share-modal", standalone: true, imports: [CommonModule], template: `<div class="overlay" *ngIf="open" (click)="onBackdropClick()">\r
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">\r
+        <div class="header">\r
+            <div class="title">{{ title }}</div>\r
+        </div>\r
+\r
+        <div class="body">\r
+            <div class="preview">{{ text.length > 120 ? text.slice(0, 120) + '\u2026' : text }}</div>\r
+\r
+            <div class="share-grid">\r
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onCopy()">\r
+                    <span class="share-icon">{{ copied ? '\u2713' : '\u{1F4CB}' }}</span>\r
+                    <span class="share-label">{{ copied ? 'Copiado' : 'Copiar' }}</span>\r
+                </button>\r
+\r
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onEmail()">\r
+                    <span class="share-icon">\u2709\uFE0F</span>\r
+                    <span class="share-label">Email</span>\r
+                </button>\r
+\r
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onWhatsApp()">\r
+                    <span class="share-icon">\u{1F4AC}</span>\r
+                    <span class="share-label">WhatsApp</span>\r
+                </button>\r
+\r
+                <button class="share-btn btn-reset kbd-focus" type="button" (click)="onTelegram()">\r
+                    <span class="share-icon">\u2708\uFE0F</span>\r
+                    <span class="share-label">Telegram</span>\r
+                </button>\r
+            </div>\r
+        </div>\r
+\r
+        <div class="footer">\r
+            <button class="btn btn-reset kbd-focus" type="button" (click)="onBackdropClick()">\r
+                Cerrar\r
+            </button>\r
+        </div>\r
+    </div>\r
+</div>`, styles: ["/* src/app/components/shared/shareModal/share-modal.component.css */\n.overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, .55);\n  display: grid;\n  place-items: center;\n  z-index: 1000;\n}\n.modal {\n  width: min(420px, calc(100vw - 32px));\n  border-radius: 14px;\n  border: 1px solid rgba(255, 255, 255, .10);\n  background: rgba(18, 18, 18, .96);\n  box-shadow: 0 18px 60px rgba(0, 0, 0, .55);\n  padding: 16px;\n}\n.header .title {\n  font-size: 16px;\n  font-weight: 700;\n  margin-bottom: 10px;\n}\n.body .preview {\n  opacity: .72;\n  font-size: 13px;\n  line-height: 1.35;\n  white-space: pre-wrap;\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .25);\n  margin-bottom: 16px;\n  max-height: 80px;\n  overflow: hidden;\n}\n.share-grid {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 10px;\n}\n.share-btn {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 6px;\n  padding: 14px 8px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  cursor: pointer;\n  transition: all .15s ease;\n}\n.share-btn:hover {\n  border-color: rgba(242, 230, 201, .28);\n  background: rgba(255, 255, 255, .06);\n}\n.share-icon {\n  font-size: 22px;\n  line-height: 1;\n}\n.share-label {\n  font-size: 11px;\n  opacity: .85;\n}\n.footer {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 14px;\n}\n.btn {\n  padding: 10px 12px;\n  border-radius: 10px;\n  border: 1px solid rgba(255, 255, 255, .14);\n  background: rgba(255, 255, 255, .06);\n}\n.btn:hover {\n  background: rgba(255, 255, 255, .10);\n}\n/*# sourceMappingURL=share-modal.component.css.map */\n"] }]
+  }], null, { open: [{
+    type: Input
+  }], title: [{
+    type: Input
+  }], text: [{
+    type: Input
+  }], action: [{
+    type: Output
+  }], onEsc: [{
+    type: HostListener,
+    args: ["document:keydown.escape"]
+  }] });
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ShareModalComponent, { className: "ShareModalComponent", filePath: "src/app/components/shared/sharemodal/share-modal.component.ts", lineNumber: 19 });
+})();
+
 // src/app/components/shared/confirmModal/confirm.service.ts
 var ConfirmService = class _ConfirmService {
   // Estado observable para el Host
@@ -48382,104 +48613,116 @@ var ConfirmService = class _ConfirmService {
 
 // src/app/history/services/history-download.service.ts
 var HistoryDownloadService = class _HistoryDownloadService {
-  store = inject2(HISTORY_STORE);
-  /**
-   * Descarga el contenido de un item del historial.
-   * @returns true si tuvo éxito, false si no había contenido o falló.
-   */
-  async download(item) {
+  http = inject2(HttpClient);
+  recorder = inject2(HistoryRecorderService);
+  baseUrl = "http://localhost:3000";
+  async downloadMixedAudio(item) {
+    if (!item.participantAudioIds) {
+      console.warn("Este item no tiene audios de participantes");
+      return;
+    }
+    const audioIds = Object.values(item.participantAudioIds);
+    if (audioIds.length === 0)
+      return;
     try {
-      const audioId = item.audioId ?? item.id;
-      const blob = await this.store.getAudio(audioId);
-      if (blob && blob.size > 0) {
-        const ext = this.getExtension(item.mimeType);
-        const baseName = item.name?.trim() || this.getTextPreview(item) || "audio";
-        const filename = this.sanitizeFilename(baseName) + "." + ext;
-        this.triggerDownload(blob, filename);
-        return true;
+      const blobs = [];
+      for (const id of audioIds) {
+        const audio = await this.recorder.getAudio(id);
+        if (audio && audio.blob) {
+          blobs.push(audio.blob);
+        }
       }
-      const text = item.outputText ?? item.inputText;
-      if (text && text.trim()) {
-        const baseName = item.name?.trim() || text.slice(0, 30) || "texto";
-        const filename = this.sanitizeFilename(baseName) + ".txt";
-        this.triggerDownload(new Blob([text], { type: "text/plain;charset=utf-8" }), filename);
-        return true;
+      if (blobs.length === 0) {
+        alert("No se encontraron los archivos de audio originales en el dispositivo.");
+        return;
       }
-      return false;
+      if (blobs.length === 1) {
+        this.downloadBlob(blobs[0], `audio_${item.name}.webm`);
+        return;
+      }
+      const formData = new FormData();
+      blobs.forEach((blob, index) => {
+        formData.append("audio", blob, `track_${index}.webm`);
+      });
+      console.log(`Enviando ${blobs.length} pistas para mezclar...`);
+      const response = await lastValueFrom(this.http.post(`${this.baseUrl}/mix`, formData, {
+        responseType: "blob"
+      }));
+      this.downloadBlob(response, `conversacion_${item.name}.mp3`);
     } catch (e) {
-      console.error("[HistoryDownloadService] Error descargando:", e);
-      return false;
+      console.error("Error descargando audio mezclado:", e);
+      alert("Error generando la mezcla de audio.");
     }
   }
+  async downloadAudio(item) {
+    if (item.category === "diarization") {
+      await this.downloadMixedAudio(item);
+      return true;
+    }
+    if (item.audioId) {
+      const audio = await this.recorder.getAudio(item.audioId);
+      if (audio) {
+        this.downloadBlob(audio.blob, `audio_${item.name}.${audio.mimeType.split("/")[1] || "webm"}`);
+        return true;
+      }
+    }
+    return false;
+  }
+  async downloadText(item) {
+    const content = item.outputText || item.inputText;
+    if (content) {
+      const blob = new Blob([content], { type: "text/plain" });
+      this.downloadBlob(blob, `${item.name}.txt`);
+      return true;
+    }
+    return false;
+  }
   /**
-   * Comparte el contenido usando Web Share API o fallback a clipboard.
-   * @returns 'shared' | 'copied' | 'nothing'
+   * Intenta compartir usando Web Share API.
+   * Returns 'shared' si el navegador lo soporta y el usuario compartió,
+   * 'unsupported' si no se soporta (caller debe mostrar modal fallback),
+   * 'error' si no hay contenido.
    */
   async share(item) {
-    try {
-      const audioId = item.audioId ?? item.id;
-      const blob = await this.store.getAudio(audioId);
-      const text = item.outputText ?? item.inputText ?? "";
-      const title = item.name?.trim() || this.getTextPreview(item) || "Escriba";
-      if (typeof navigator.share === "function") {
-        const shareData = { title };
-        if (blob && blob.size > 0) {
-          const ext = this.getExtension(item.mimeType);
-          const file = new File([blob], `audio.${ext}`, { type: blob.type || "audio/webm" });
-          if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-            shareData.files = [file];
-          }
-        }
-        if (text.trim()) {
-          shareData.text = text;
-        }
-        if (shareData.files?.length || shareData.text) {
-          await navigator.share(shareData);
+    const text = item.outputText || item.inputText;
+    if (!text)
+      return "error";
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: item.name || "Escriba",
+          text
+        });
+        return "shared";
+      } catch (e) {
+        if (e?.name === "AbortError")
           return "shared";
-        }
+        return "unsupported";
       }
-      if (text.trim() && typeof navigator.clipboard?.writeText === "function") {
-        await navigator.clipboard.writeText(text);
-        return "copied";
-      }
-      return "nothing";
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") {
-        return "nothing";
-      }
-      console.error("[HistoryDownloadService] Error compartiendo:", e);
-      return "nothing";
     }
+    return "unsupported";
   }
-  getTextPreview(item) {
-    const src = (item.outputText ?? item.inputText ?? "").trim();
-    return src.slice(0, 30);
+  /** Obtener el texto compartible de un item */
+  getShareText(item) {
+    return item.outputText || item.inputText || "";
   }
-  getExtension(mimeType) {
-    if (!mimeType)
-      return "webm";
-    if (mimeType.includes("wav"))
-      return "wav";
-    if (mimeType.includes("mp3") || mimeType.includes("mpeg"))
-      return "mp3";
-    if (mimeType.includes("ogg"))
-      return "ogg";
-    if (mimeType.includes("mp4") || mimeType.includes("m4a"))
-      return "m4a";
-    return "webm";
+  /** Obtener audio blob URL para reproducción */
+  async getAudioUrl(item) {
+    if (item.audioId) {
+      const audio = await this.recorder.getAudio(item.audioId);
+      if (audio) {
+        return URL.createObjectURL(audio.blob);
+      }
+    }
+    return null;
   }
-  sanitizeFilename(name) {
-    return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_").replace(/\s+/g, " ").trim().slice(0, 50) || "archivo";
-  }
-  triggerDownload(blob, filename) {
+  downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+    URL.revokeObjectURL(url);
   }
   static \u0275fac = function HistoryDownloadService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _HistoryDownloadService)();
@@ -48497,7 +48740,7 @@ var HistoryDownloadService = class _HistoryDownloadService {
 function HistoryPage_button_20_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 19);
+    \u0275\u0275elementStart(0, "button", 20);
     \u0275\u0275listener("click", function HistoryPage_button_20_Template_button_click_0_listener() {
       const c_r2 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
@@ -48516,26 +48759,26 @@ function HistoryPage_button_20_Template(rf, ctx) {
 }
 function HistoryPage_div_25_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 20);
+    \u0275\u0275elementStart(0, "div", 21);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" A\xFAn no hay registros en \u201C", ctx_r2.headerTitle, "\u201D. ");
+    \u0275\u0275textInterpolate1(' A\xFAn no hay registros en "', ctx_r2.headerTitle, '". ');
   }
 }
 function HistoryPage_div_26_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 20);
+    \u0275\u0275elementStart(0, "div", 21);
     \u0275\u0275text(1, "Cargando\u2026");
     \u0275\u0275elementEnd();
   }
 }
 function HistoryPage_div_27_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 20);
+    \u0275\u0275elementStart(0, "div", 21);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -48545,23 +48788,21 @@ function HistoryPage_div_27_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.errorMsg);
   }
 }
-function HistoryPage_ul_28_li_1_ng_container_3_Template(rf, ctx) {
+function HistoryPage_ul_28_li_1_div_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "span", 34);
+    \u0275\u0275elementStart(0, "div", 36)(1, "span", 37);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "button", 35);
-    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_ng_container_3_Template_button_click_3_listener() {
+    \u0275\u0275elementStart(3, "button", 38);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_div_2_Template_button_click_3_listener() {
       \u0275\u0275restoreView(_r5);
       const it_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.startRename(it_r6));
     });
     \u0275\u0275text(4, " \u270E ");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const it_r6 = \u0275\u0275nextContext().$implicit;
@@ -48570,27 +48811,27 @@ function HistoryPage_ul_28_li_1_ng_container_3_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.displayName(it_r6));
   }
 }
-function HistoryPage_ul_28_li_1_ng_template_4_Template(rf, ctx) {
+function HistoryPage_ul_28_li_1_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "input", 36);
-    \u0275\u0275listener("input", function HistoryPage_ul_28_li_1_ng_template_4_Template_input_input_0_listener($event) {
+    \u0275\u0275elementStart(0, "input", 39);
+    \u0275\u0275listener("input", function HistoryPage_ul_28_li_1_ng_template_3_Template_input_input_0_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r2 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r2.draftName = $event.target.value ?? "");
-    })("keydown.enter", function HistoryPage_ul_28_li_1_ng_template_4_Template_input_keydown_enter_0_listener() {
+    })("keydown.enter", function HistoryPage_ul_28_li_1_ng_template_3_Template_input_keydown_enter_0_listener() {
       \u0275\u0275restoreView(_r7);
       const it_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.saveRename(it_r6));
-    })("keydown.escape", function HistoryPage_ul_28_li_1_ng_template_4_Template_input_keydown_escape_0_listener() {
+    })("keydown.escape", function HistoryPage_ul_28_li_1_ng_template_3_Template_input_keydown_escape_0_listener() {
       \u0275\u0275restoreView(_r7);
       const ctx_r2 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r2.cancelRename());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(1, "button", 37);
-    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_ng_template_4_Template_button_click_1_listener() {
+    \u0275\u0275elementStart(1, "button", 40);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_ng_template_3_Template_button_click_1_listener() {
       \u0275\u0275restoreView(_r7);
       const it_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
@@ -48598,8 +48839,8 @@ function HistoryPage_ul_28_li_1_ng_template_4_Template(rf, ctx) {
     });
     \u0275\u0275text(2, " \u2713 ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "button", 38);
-    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_ng_template_4_Template_button_click_3_listener() {
+    \u0275\u0275elementStart(3, "button", 41);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_ng_template_3_Template_button_click_3_listener() {
       \u0275\u0275restoreView(_r7);
       const ctx_r2 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r2.cancelRename());
@@ -48612,71 +48853,95 @@ function HistoryPage_ul_28_li_1_ng_template_4_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r2.draftName);
   }
 }
+function HistoryPage_ul_28_li_1_button_20_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 42);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_button_20_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r8);
+      const it_r6 = \u0275\u0275nextContext().$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r2.downloadAudio(it_r6));
+    });
+    \u0275\u0275text(1, " \u{1F3B5} ");
+    \u0275\u0275elementEnd();
+  }
+}
 function HistoryPage_ul_28_li_1_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "li", 23)(1, "div", 24)(2, "div", 25);
-    \u0275\u0275template(3, HistoryPage_ul_28_li_1_ng_container_3_Template, 5, 1, "ng-container", 26)(4, HistoryPage_ul_28_li_1_ng_template_4_Template, 5, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "li", 24)(1, "div", 25);
+    \u0275\u0275template(2, HistoryPage_ul_28_li_1_div_2_Template, 5, 1, "div", 26)(3, HistoryPage_ul_28_li_1_ng_template_3_Template, 5, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(5, "div", 27)(6, "span", 28);
+    \u0275\u0275text(7);
+    \u0275\u0275pipe(8, "date");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "div", 27)(7, "span", 28);
-    \u0275\u0275text(8);
-    \u0275\u0275pipe(9, "date");
+    \u0275\u0275elementStart(9, "span", 29);
+    \u0275\u0275text(10, "\u2022");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "span", 29);
-    \u0275\u0275text(11, "\u2022");
+    \u0275\u0275elementStart(11, "span", 28);
+    \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "span", 28);
-    \u0275\u0275text(13);
+    \u0275\u0275elementStart(13, "span", 29);
+    \u0275\u0275text(14, "\u2022");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "span", 29);
-    \u0275\u0275text(15, "\u2022");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "span", 28);
-    \u0275\u0275text(17);
+    \u0275\u0275elementStart(15, "span", 28);
+    \u0275\u0275text(16);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(18, "div", 30)(19, "button", 31);
-    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_19_listener() {
+    \u0275\u0275elementStart(17, "div", 30)(18, "button", 31);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_18_listener() {
       const it_r6 = \u0275\u0275restoreView(_r4).$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r2.download(it_r6));
+      return \u0275\u0275resetView(ctx_r2.openPreview(it_r6));
     });
-    \u0275\u0275text(20, " \u2B07 ");
+    \u0275\u0275text(19, " \u{1F441} ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "button", 32);
+    \u0275\u0275template(20, HistoryPage_ul_28_li_1_button_20_Template, 2, 0, "button", 32);
+    \u0275\u0275elementStart(21, "button", 33);
     \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_21_listener() {
+      const it_r6 = \u0275\u0275restoreView(_r4).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r2.downloadText(it_r6));
+    });
+    \u0275\u0275text(22, " \u{1F4C4} ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(23, "button", 34);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_23_listener() {
       const it_r6 = \u0275\u0275restoreView(_r4).$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.share(it_r6));
     });
-    \u0275\u0275text(22, " \u2934 ");
+    \u0275\u0275text(24, " \u2934 ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(23, "button", 33);
-    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_23_listener() {
+    \u0275\u0275elementStart(25, "button", 35);
+    \u0275\u0275listener("click", function HistoryPage_ul_28_li_1_Template_button_click_25_listener() {
       const it_r6 = \u0275\u0275restoreView(_r4).$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.deleteOne(it_r6));
     });
-    \u0275\u0275text(24, " \u{1F5D1} ");
+    \u0275\u0275text(26, " \u{1F5D1} ");
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
     const it_r6 = ctx.$implicit;
-    const editTpl_r8 = \u0275\u0275reference(5);
+    const editTpl_r9 = \u0275\u0275reference(4);
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ctx_r2.editingId !== it_r6.id)("ngIfElse", editTpl_r8);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngIf", ctx_r2.editingId !== it_r6.id)("ngIfElse", editTpl_r9);
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind2(9, 5, it_r6.createdAt, "short"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind2(8, 6, it_r6.createdAt, "short"));
     \u0275\u0275advance(5);
     \u0275\u0275textInterpolate(ctx_r2.formatDuration(it_r6.durationMs));
     \u0275\u0275advance(4);
     \u0275\u0275textInterpolate(ctx_r2.formatBytes(it_r6.sizeBytes));
+    \u0275\u0275advance(4);
+    \u0275\u0275property("ngIf", it_r6.category === "diarization" || it_r6.audioId);
   }
 }
 function HistoryPage_ul_28_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 21);
-    \u0275\u0275template(1, HistoryPage_ul_28_li_1_Template, 25, 8, "li", 22);
+    \u0275\u0275elementStart(0, "ul", 22);
+    \u0275\u0275template(1, HistoryPage_ul_28_li_1_Template, 27, 9, "li", 23);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -48685,12 +48950,12 @@ function HistoryPage_ul_28_Template(rf, ctx) {
     \u0275\u0275property("ngForOf", ctx_r2.items);
   }
 }
-function HistoryPage_app_profile_panel_30_Template(rf, ctx) {
+function HistoryPage_app_profile_panel_31_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-profile-panel");
   }
 }
-function HistoryPage_app_settings_panel_31_Template(rf, ctx) {
+function HistoryPage_app_settings_panel_32_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "app-settings-panel");
   }
@@ -48724,6 +48989,10 @@ var HistoryPage = class _HistoryPage {
   // --- Edición inline del nombre ---
   editingId = null;
   draftName = "";
+  // --- Share modal state ---
+  shareModalOpen = false;
+  shareModalTitle = "";
+  shareModalText = "";
   constructor(router, route, r2) {
     this.router = router;
     this.route = route;
@@ -48863,7 +49132,7 @@ var HistoryPage = class _HistoryPage {
       return;
     const ok = await this.confirm.ask({
       title: "Borrar item",
-      text: `\xBFBorrar \u201C${this.displayName(it)}\u201D?`,
+      text: `\xBFBorrar "${this.displayName(it)}"?`,
       confirmText: "Borrar",
       cancelText: "Cancelar",
       variant: "danger"
@@ -48885,18 +49154,43 @@ var HistoryPage = class _HistoryPage {
       this.cdr.detectChanges();
     }
   }
-  async download(it) {
-    const ok = await this.downloadService.download(it);
-    if (!ok) {
-      this.errorMsg = "No hay contenido para descargar";
+  async downloadText(it) {
+    const ok = await this.downloadService.downloadText(it);
+    if (!ok)
+      this.showNoContentError();
+  }
+  async downloadAudio(it) {
+    const ok = await this.downloadService.downloadAudio(it);
+    if (!ok)
+      this.showNoContentError();
+  }
+  showNoContentError() {
+    this.errorMsg = "No hay contenido para descargar";
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.errorMsg = "";
       this.cdr.detectChanges();
-    }
+    }, 2e3);
   }
   async share(it) {
     const result = await this.downloadService.share(it);
-    if (result === "copied") {
-      console.log("Texto copiado al portapapeles");
+    if (result === "shared") {
+    } else if (result === "unsupported") {
+      this.shareModalTitle = this.displayName(it);
+      this.shareModalText = this.downloadService.getShareText(it);
+      this.shareModalOpen = true;
+      this.cdr.detectChanges();
+    } else {
+      this.showNoContentError();
     }
+  }
+  onShareAction() {
+    this.shareModalOpen = false;
+    this.cdr.detectChanges();
+  }
+  // --- Preview ---
+  openPreview(it) {
+    this.router.navigate(["/preview", it.id]);
   }
   // --- Scroll lock helpers ---
   syncScrollLock() {
@@ -48914,7 +49208,7 @@ var HistoryPage = class _HistoryPage {
   static \u0275fac = function HistoryPage_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _HistoryPage)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActivatedRoute), \u0275\u0275directiveInject(Renderer2));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HistoryPage, selectors: [["app-history-page"]], decls: 32, vars: 11, consts: [["editTpl", ""], ["brandName", "Escriba", "subtitle", "Historial", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "box"], ["aria-label", "Categor\xEDas de historial", 1, "tabs"], ["type", "button", "class", "tab btn-reset kbd-focus", 3, "tab--active", "click", 4, "ngFor", "ngForOf"], ["aria-label", "Lista de outputs", 1, "list"], ["class", "empty", 4, "ngIf"], ["class", "bulletList", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], ["type", "button", 1, "tab", "btn-reset", "kbd-focus", 3, "click"], [1, "empty"], [1, "bulletList"], ["class", "bulletRow", 4, "ngFor", "ngForOf"], [1, "bulletRow"], [1, "left"], [1, "nameLine"], [4, "ngIf", "ngIfElse"], [1, "metaLine"], [1, "meta"], [1, "dot"], [1, "right"], ["type", "button", "title", "Descargar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Compartir", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Borrar", 1, "iconBtn", "danger", "btn-reset", "kbd-focus", 3, "click"], [1, "name"], ["type", "button", "title", "Renombrar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "text", 1, "nameInput", "kbd-focus", 3, "input", "keydown.enter", "keydown.escape", "value"], ["type", "button", "title", "Guardar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Cancelar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"]], template: function HistoryPage_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HistoryPage, selectors: [["app-history-page"]], decls: 33, vars: 14, consts: [["editTpl", ""], ["brandName", "Escriba", "subtitle", "Historial", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "box"], ["aria-label", "Categor\xEDas de historial", 1, "tabs"], ["type", "button", "class", "tab btn-reset kbd-focus", 3, "tab--active", "click", 4, "ngFor", "ngForOf"], ["aria-label", "Lista de outputs", 1, "list"], ["class", "empty", 4, "ngIf"], ["class", "bulletList", 4, "ngIf"], [3, "action", "open", "title", "text"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], ["type", "button", 1, "tab", "btn-reset", "kbd-focus", 3, "click"], [1, "empty"], [1, "bulletList"], ["class", "bulletRow", 4, "ngFor", "ngForOf"], [1, "bulletRow"], [1, "left"], ["class", "nameLine", 4, "ngIf", "ngIfElse"], [1, "metaLine"], [1, "meta"], [1, "dot"], [1, "right"], ["type", "button", "title", "Ver detalle", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["class", "iconBtn btn-reset kbd-focus", "type", "button", "title", "Descargar Audio", 3, "click", 4, "ngIf"], ["type", "button", "title", "Descargar Texto", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Compartir", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Borrar", 1, "iconBtn", "danger", "btn-reset", "kbd-focus", 3, "click"], [1, "nameLine"], [1, "name"], ["type", "button", "title", "Renombrar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "text", 1, "nameInput", "kbd-focus", 3, "input", "keydown.enter", "keydown.escape", "value"], ["type", "button", "title", "Guardar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Cancelar", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"], ["type", "button", "title", "Descargar Audio", 1, "iconBtn", "btn-reset", "kbd-focus", 3, "click"]], template: function HistoryPage_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "app-top-nav-bar", 1);
       \u0275\u0275listener("profileClick", function HistoryPage_Template_app_top_nav_bar_profileClick_0_listener() {
@@ -48953,11 +49247,16 @@ var HistoryPage = class _HistoryPage {
       \u0275\u0275elementStart(24, "section", 14);
       \u0275\u0275template(25, HistoryPage_div_25_Template, 2, 1, "div", 15)(26, HistoryPage_div_26_Template, 2, 0, "div", 15)(27, HistoryPage_div_27_Template, 2, 1, "div", 15)(28, HistoryPage_ul_28_Template, 2, 1, "ul", 16);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275elementStart(29, "app-right-drawer", 17);
-      \u0275\u0275listener("close", function HistoryPage_Template_app_right_drawer_close_29_listener() {
+      \u0275\u0275elementStart(29, "app-share-modal", 17);
+      \u0275\u0275listener("action", function HistoryPage_Template_app_share_modal_action_29_listener() {
+        return ctx.onShareAction();
+      });
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(30, "app-right-drawer", 18);
+      \u0275\u0275listener("close", function HistoryPage_Template_app_right_drawer_close_30_listener() {
         return ctx.closeDrawer();
       });
-      \u0275\u0275template(30, HistoryPage_app_profile_panel_30_Template, 1, 0, "app-profile-panel", 18)(31, HistoryPage_app_settings_panel_31_Template, 1, 0, "app-settings-panel", 18);
+      \u0275\u0275template(31, HistoryPage_app_profile_panel_31_Template, 1, 0, "app-profile-panel", 19)(32, HistoryPage_app_settings_panel_32_Template, 1, 0, "app-settings-panel", 19);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -48976,6 +49275,8 @@ var HistoryPage = class _HistoryPage {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", !ctx.loading && ctx.items.length > 0);
       \u0275\u0275advance();
+      \u0275\u0275property("open", ctx.shareModalOpen)("title", ctx.shareModalTitle)("text", ctx.shareModalText);
+      \u0275\u0275advance();
       \u0275\u0275property("open", ctx.drawerOpen)("title", ctx.drawerTitle);
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.mode === "profile");
@@ -48990,8 +49291,9 @@ var HistoryPage = class _HistoryPage {
     RightDrawerComponent,
     ProfilePanelComponent,
     SettingsPanelComponent,
+    ShareModalComponent,
     DatePipe
-  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n}\n.hint[_ngcontent-%COMP%] {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.box[_ngcontent-%COMP%] {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.box[_ngcontent-%COMP%]    > label[_ngcontent-%COMP%] {\n  display: block;\n  margin-bottom: 10px;\n  font-weight: 600;\n}\n.tabs[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.tab[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  color: inherit;\n  cursor: pointer;\n  line-height: 1;\n}\n.tab[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.tab--active[_ngcontent-%COMP%] {\n  border-color: rgba(242, 230, 201, .34);\n  background: rgba(242, 230, 201, .06);\n}\n.list[_ngcontent-%COMP%] {\n  margin-top: 2px;\n}\n.empty[_ngcontent-%COMP%] {\n  padding: 12px 12px;\n  border-radius: 12px;\n  border: 1px dashed rgba(242, 230, 201, .18);\n  color: var(--muted);\n}\n.actions[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-bottom: 12px;\n}\n.danger[_ngcontent-%COMP%] {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n.danger[_ngcontent-%COMP%]:hover {\n  border-color: rgba(255, 120, 120, .35);\n}\n.bulletList[_ngcontent-%COMP%] {\n  margin: 10px 0 0;\n  padding-left: 18px;\n}\n.bulletRow[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 0;\n  border-bottom: 1px solid rgba(242, 230, 201, .10);\n}\n.left[_ngcontent-%COMP%] {\n  min-width: 0;\n  flex: 1;\n}\n.nameLine[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  max-width: 100%;\n}\n.nameInput[_ngcontent-%COMP%] {\n  flex: 1;\n  min-width: 180px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .16);\n  background: rgba(255, 255, 255, .03);\n  color: var(--text);\n}\n.metaLine[_ngcontent-%COMP%] {\n  margin-top: 4px;\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  color: var(--muted);\n  font-size: 12px;\n}\n.dot[_ngcontent-%COMP%] {\n  opacity: .7;\n}\n.right[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.iconBtn[_ngcontent-%COMP%] {\n  width: 34px;\n  height: 34px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  display: grid;\n  place-items: center;\n}\n.iconBtn[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.iconBtn.danger[_ngcontent-%COMP%] {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n/*# sourceMappingURL=history.page.css.map */"] });
+  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n}\n.diarization-content[_ngcontent-%COMP%] {\n  font-family: inherit;\n  line-height: 1.6;\n}\n.actions-row[_ngcontent-%COMP%] {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);\n  display: flex;\n  gap: 12px;\n}\n.btn-text[_ngcontent-%COMP%] {\n  background: none;\n  border: 1px solid rgba(242, 230, 201, 0.3);\n  color: var(--brand);\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.btn-text[_ngcontent-%COMP%]:hover {\n  background: rgba(242, 230, 201, 0.1);\n}\n.line[_ngcontent-%COMP%] {\n  margin-bottom: 8px;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n}\n.hint[_ngcontent-%COMP%] {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.box[_ngcontent-%COMP%] {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.box[_ngcontent-%COMP%]    > label[_ngcontent-%COMP%] {\n  display: block;\n  margin-bottom: 10px;\n  font-weight: 600;\n}\n.tabs[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.tab[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  color: inherit;\n  cursor: pointer;\n  line-height: 1;\n}\n.tab[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.tab--active[_ngcontent-%COMP%] {\n  border-color: rgba(242, 230, 201, .34);\n  background: rgba(242, 230, 201, .06);\n}\n.list[_ngcontent-%COMP%] {\n  margin-top: 2px;\n}\n.empty[_ngcontent-%COMP%] {\n  padding: 12px 12px;\n  border-radius: 12px;\n  border: 1px dashed rgba(242, 230, 201, .18);\n  color: var(--muted);\n}\n.actions[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-bottom: 12px;\n}\n.danger[_ngcontent-%COMP%] {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n.danger[_ngcontent-%COMP%]:hover {\n  border-color: rgba(255, 120, 120, .35);\n}\n.bulletList[_ngcontent-%COMP%] {\n  margin: 10px 0 0;\n  padding-left: 18px;\n}\n.bulletRow[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 0;\n  border-bottom: 1px solid rgba(242, 230, 201, .10);\n}\n.left[_ngcontent-%COMP%] {\n  min-width: 0;\n  flex: 1;\n}\n.nameLine[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  max-width: 100%;\n}\n.nameInput[_ngcontent-%COMP%] {\n  flex: 1;\n  min-width: 180px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .16);\n  background: rgba(255, 255, 255, .03);\n  color: var(--text);\n}\n.metaLine[_ngcontent-%COMP%] {\n  margin-top: 4px;\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  color: var(--muted);\n  font-size: 12px;\n}\n.dot[_ngcontent-%COMP%] {\n  opacity: .7;\n}\n.right[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.iconBtn[_ngcontent-%COMP%] {\n  width: 34px;\n  height: 34px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  display: grid;\n  place-items: center;\n}\n.iconBtn[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.iconBtn.danger[_ngcontent-%COMP%] {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n/*# sourceMappingURL=history.page.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HistoryPage, [{
@@ -49001,7 +49303,8 @@ var HistoryPage = class _HistoryPage {
       TopNavBarComponent,
       RightDrawerComponent,
       ProfilePanelComponent,
-      SettingsPanelComponent
+      SettingsPanelComponent,
+      ShareModalComponent
     ], template: `<app-top-nav-bar brandName="Escriba" subtitle="Historial" (profileClick)="openProfile()"\r
   (settingsClick)="openSettings()"></app-top-nav-bar>\r
 \r
@@ -49037,11 +49340,9 @@ var HistoryPage = class _HistoryPage {
     <!-- Caja interior para lista -->\r
     <div class="box">\r
       <label>Outputs</label>\r
-\r
-\r
       <section class="list" aria-label="Lista de outputs">\r
         <div class="empty" *ngIf="!loading && items.length === 0">\r
-          A\xFAn no hay registros en \u201C{{ headerTitle }}\u201D.\r
+          A\xFAn no hay registros en "{{ headerTitle }}".\r
         </div>\r
 \r
         <div class="empty" *ngIf="loading">Cargando\u2026</div>\r
@@ -49049,28 +49350,27 @@ var HistoryPage = class _HistoryPage {
 \r
         <ul class="bulletList" *ngIf="!loading && items.length > 0">\r
           <li class="bulletRow" *ngFor="let it of items">\r
+            <!-- Bloque Izquierdo: Info -->\r
             <div class="left">\r
               <!-- Nombre + editar -->\r
-              <div class="nameLine">\r
-                <ng-container *ngIf="editingId !== it.id; else editTpl">\r
-                  <span class="name">{{ displayName(it) }}</span>\r
-                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Renombrar" (click)="startRename(it)">\r
-                    \u270E\r
-                  </button>\r
-                </ng-container>\r
-\r
-                <ng-template #editTpl>\r
-                  <input class="nameInput kbd-focus" type="text" [value]="draftName"\r
-                    (input)="draftName = ($any($event.target).value ?? '')" (keydown.enter)="saveRename(it)"\r
-                    (keydown.escape)="cancelRename()" />\r
-                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Guardar" (click)="saveRename(it)">\r
-                    \u2713\r
-                  </button>\r
-                  <button class="iconBtn btn-reset kbd-focus" type="button" title="Cancelar" (click)="cancelRename()">\r
-                    \u2715\r
-                  </button>\r
-                </ng-template>\r
+              <div class="nameLine" *ngIf="editingId !== it.id; else editTpl">\r
+                <span class="name">{{ displayName(it) }}</span>\r
+                <button class="iconBtn btn-reset kbd-focus" type="button" title="Renombrar" (click)="startRename(it)">\r
+                  \u270E\r
+                </button>\r
               </div>\r
+\r
+              <ng-template #editTpl>\r
+                <input class="nameInput kbd-focus" type="text" [value]="draftName"\r
+                  (input)="draftName = ($any($event.target).value ?? '')" (keydown.enter)="saveRename(it)"\r
+                  (keydown.escape)="cancelRename()" />\r
+                <button class="iconBtn btn-reset kbd-focus" type="button" title="Guardar" (click)="saveRename(it)">\r
+                  \u2713\r
+                </button>\r
+                <button class="iconBtn btn-reset kbd-focus" type="button" title="Cancelar" (click)="cancelRename()">\r
+                  \u2715\r
+                </button>\r
+              </ng-template>\r
 \r
               <!-- Metadatos -->\r
               <div class="metaLine">\r
@@ -49080,12 +49380,25 @@ var HistoryPage = class _HistoryPage {
                 <span class="dot">\u2022</span>\r
                 <span class="meta">{{ formatBytes(it.sizeBytes) }}</span>\r
               </div>\r
-            </div>\r
+            </div> <!-- Fin Bloque Izquierdo -->\r
 \r
-            <!-- Acciones -->\r
+            <!-- Acciones Derecha -->\r
             <div class="right">\r
-              <button class="iconBtn btn-reset kbd-focus" type="button" title="Descargar" (click)="download(it)">\r
-                \u2B07\r
+              <!-- Preview -->\r
+              <button class="iconBtn btn-reset kbd-focus" type="button" title="Ver detalle" (click)="openPreview(it)">\r
+                \u{1F441}\r
+              </button>\r
+\r
+              <!-- Descargar Audio (si aplica) -->\r
+              <button class="iconBtn btn-reset kbd-focus" type="button" title="Descargar Audio"\r
+                (click)="downloadAudio(it)" *ngIf="it.category === 'diarization' || it.audioId">\r
+                \u{1F3B5}\r
+              </button>\r
+\r
+              <!-- Descargar Texto -->\r
+              <button class="iconBtn btn-reset kbd-focus" type="button" title="Descargar Texto"\r
+                (click)="downloadText(it)">\r
+                \u{1F4C4}\r
               </button>\r
 \r
               <button class="iconBtn btn-reset kbd-focus" type="button" title="Compartir" (click)="share(it)">\r
@@ -49103,14 +49416,18 @@ var HistoryPage = class _HistoryPage {
   </section>\r
 </main>\r
 \r
+<!-- Share Modal (fallback para navegadores sin Web Share API) -->\r
+<app-share-modal [open]="shareModalOpen" [title]="shareModalTitle" [text]="shareModalText" (action)="onShareAction()">\r
+</app-share-modal>\r
+\r
 <app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">\r
   <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>\r
   <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>\r
-</app-right-drawer>`, styles: ["/* src/app/history/pages/history.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n}\n.panel__header h2 {\n  margin: 0;\n  font-size: 18px;\n}\n.hint {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.box {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.box > label {\n  display: block;\n  margin-bottom: 10px;\n  font-weight: 600;\n}\n.tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.tab {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  color: inherit;\n  cursor: pointer;\n  line-height: 1;\n}\n.tab:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.tab--active {\n  border-color: rgba(242, 230, 201, .34);\n  background: rgba(242, 230, 201, .06);\n}\n.list {\n  margin-top: 2px;\n}\n.empty {\n  padding: 12px 12px;\n  border-radius: 12px;\n  border: 1px dashed rgba(242, 230, 201, .18);\n  color: var(--muted);\n}\n.actions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-bottom: 12px;\n}\n.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n.danger:hover {\n  border-color: rgba(255, 120, 120, .35);\n}\n.bulletList {\n  margin: 10px 0 0;\n  padding-left: 18px;\n}\n.bulletRow {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 0;\n  border-bottom: 1px solid rgba(242, 230, 201, .10);\n}\n.left {\n  min-width: 0;\n  flex: 1;\n}\n.nameLine {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.name {\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  max-width: 100%;\n}\n.nameInput {\n  flex: 1;\n  min-width: 180px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .16);\n  background: rgba(255, 255, 255, .03);\n  color: var(--text);\n}\n.metaLine {\n  margin-top: 4px;\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  color: var(--muted);\n  font-size: 12px;\n}\n.dot {\n  opacity: .7;\n}\n.right {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.iconBtn {\n  width: 34px;\n  height: 34px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  display: grid;\n  place-items: center;\n}\n.iconBtn:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.iconBtn.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n/*# sourceMappingURL=history.page.css.map */\n"] }]
+</app-right-drawer>`, styles: ["/* src/app/history/pages/history.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n}\n.diarization-content {\n  font-family: inherit;\n  line-height: 1.6;\n}\n.actions-row {\n  margin-bottom: 16px;\n  padding-bottom: 12px;\n  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);\n  display: flex;\n  gap: 12px;\n}\n.btn-text {\n  background: none;\n  border: 1px solid rgba(242, 230, 201, 0.3);\n  color: var(--brand);\n  cursor: pointer;\n  padding: 6px 12px;\n  border-radius: 6px;\n  font-size: 13px;\n  transition: all 0.2s;\n}\n.btn-text:hover {\n  background: rgba(242, 230, 201, 0.1);\n}\n.line {\n  margin-bottom: 8px;\n}\n.panel__header h2 {\n  margin: 0;\n  font-size: 18px;\n}\n.hint {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.box {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.box > label {\n  display: block;\n  margin-bottom: 10px;\n  font-weight: 600;\n}\n.tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n}\n.tab {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  color: inherit;\n  cursor: pointer;\n  line-height: 1;\n}\n.tab:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.tab--active {\n  border-color: rgba(242, 230, 201, .34);\n  background: rgba(242, 230, 201, .06);\n}\n.list {\n  margin-top: 2px;\n}\n.empty {\n  padding: 12px 12px;\n  border-radius: 12px;\n  border: 1px dashed rgba(242, 230, 201, .18);\n  color: var(--muted);\n}\n.actions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-bottom: 12px;\n}\n.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n.danger:hover {\n  border-color: rgba(255, 120, 120, .35);\n}\n.bulletList {\n  margin: 10px 0 0;\n  padding-left: 18px;\n}\n.bulletRow {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 0;\n  border-bottom: 1px solid rgba(242, 230, 201, .10);\n}\n.left {\n  min-width: 0;\n  flex: 1;\n}\n.nameLine {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  min-width: 0;\n}\n.name {\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  max-width: 100%;\n}\n.nameInput {\n  flex: 1;\n  min-width: 180px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .16);\n  background: rgba(255, 255, 255, .03);\n  color: var(--text);\n}\n.metaLine {\n  margin-top: 4px;\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  color: var(--muted);\n  font-size: 12px;\n}\n.dot {\n  opacity: .7;\n}\n.right {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.iconBtn {\n  width: 34px;\n  height: 34px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n  display: grid;\n  place-items: center;\n}\n.iconBtn:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.iconBtn.danger {\n  border-color: rgba(255, 120, 120, .22);\n  background: rgba(255, 120, 120, .06);\n}\n/*# sourceMappingURL=history.page.css.map */\n"] }]
   }], () => [{ type: Router }, { type: ActivatedRoute }, { type: Renderer2 }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HistoryPage, { className: "HistoryPage", filePath: "src/app/history/pages/history.page.ts", lineNumber: 39 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HistoryPage, { className: "HistoryPage", filePath: "src/app/history/pages/history.page.ts", lineNumber: 41 });
 })();
 
 // node_modules/peerjs-js-binarypack/dist/binarypack.mjs
@@ -53443,65 +53760,199 @@ var SessionService = class _SessionService {
 
 // src/app/voice/services/diarization.service.ts
 var DiarizationService = class _DiarizationService {
+  baseUrl = "http://localhost:3000";
   session = inject2(SessionService);
   recorder = inject2(HistoryRecorderService);
   http = inject2(HttpClient);
-  async processSessionAndSave() {
-    const participants = this.session.participants();
-    const sessionId = this.session.sessionId();
-    const startTime = Date.now();
+  async processSessionAndSave(prompt = "") {
     const recordings = this.session.getAllRecordedBlobs();
     if (recordings.length === 0) {
       console.warn("No hay grabaciones para procesar");
       return false;
     }
+    return this.processBlobsAndSave(recordings, prompt);
+  }
+  async processFileAndSave(file, prompt = "") {
+    const recordings = [{
+      name: "Archivo Importado",
+      blobs: [file]
+    }];
+    return this.processBlobsAndSave(recordings, prompt);
+  }
+  async processBlobsAndSave(recordings, prompt) {
     const segments = [];
     const speakerNames = [];
+    const audioBlobs = /* @__PURE__ */ new Map();
     for (const rec of recordings) {
       speakerNames.push(rec.name);
       const fullBlob = new Blob(rec.blobs, { type: "audio/webm" });
+      audioBlobs.set(rec.name, fullBlob);
       try {
-        const json = await this.transcribeWithSegments(fullBlob);
-        if (json && json.transcription) {
-          json.transcription.forEach((seg) => {
+        const json = await this.transcribeWithSegments(fullBlob, prompt);
+        if (json.segments) {
+          json.segments.forEach((seg) => {
             segments.push({
               speaker: rec.name,
-              startMs: seg.offsets.from,
-              endMs: seg.offsets.to,
+              startMs: seg.start * 1e3,
+              endMs: seg.end * 1e3,
               text: seg.text.trim()
             });
           });
+        } else if (json.transcription) {
+          json.transcription.forEach((item) => {
+            let start = 0;
+            let end = 0;
+            if (item.offsets) {
+              start = item.offsets.from;
+              end = item.offsets.to;
+            } else if (item.timestamps) {
+              start = this.parseTime(item.timestamps.from);
+              end = this.parseTime(item.timestamps.to);
+            }
+            segments.push({
+              speaker: rec.name,
+              startMs: start,
+              endMs: end,
+              text: item.text.trim()
+            });
+          });
+        } else {
+          console.warn(`[Diarization] ${rec.name}: JSON desconocido`, json);
         }
       } catch (e) {
         console.error(`Error transcribiendo canal de ${rec.name}:`, e);
       }
     }
-    segments.sort((a, b) => a.startMs - b.startMs);
-    const combinedText = segments.map((s) => {
-      const timeStr = this.formatTime(s.startMs);
-      return `[${timeStr}] ${s.speaker}: ${s.text}`;
-    }).join("\n");
-    const lastSeg = segments[segments.length - 1];
-    const durationMs = lastSeg ? lastSeg.endMs : 0;
-    await this.recorder.recordDiarization({
-      combinedText,
-      startTime: Date.now() - durationMs,
-      // Estimado
-      durationMs,
-      speakers: speakerNames
-    });
-    return true;
+    if (segments.length > 0) {
+      segments.sort((a, b) => a.startMs - b.startMs);
+      const mergedSegments = this.smartMergeSegments(segments);
+      const lastSeg = segments[segments.length - 1];
+      const durationMs = lastSeg ? lastSeg.endMs : 0;
+      const combinedText = mergedSegments.map((s) => {
+        let finalText = s.text;
+        if (prompt) {
+          finalText = this.applyKeywordCorrection(finalText, prompt);
+        }
+        return `${s.speaker}: ${finalText}`;
+      }).join("\n\n");
+      await this.recorder.recordDiarization({
+        combinedText,
+        startTime: Date.now() - durationMs,
+        durationMs,
+        speakers: speakerNames,
+        audioBlobs
+      });
+      console.log("Diarizaci\xF3n guardada con \xE9xito.");
+      return true;
+    }
+    console.warn("No se obtuvieron segmentos v\xE1lidos.");
+    return false;
   }
-  async transcribeWithSegments(blob) {
+  parseTime(timeStr) {
+    if (!timeStr)
+      return 0;
+    try {
+      const cleanStr = timeStr.replace(",", ".");
+      const [hms, msPart] = cleanStr.includes(".") ? cleanStr.split(".") : [cleanStr, "0"];
+      const parts = hms.split(":").map(Number);
+      let h = 0, m = 0, s = 0;
+      if (parts.length === 3) {
+        [h, m, s] = parts;
+      } else if (parts.length === 2) {
+        [m, s] = parts;
+      } else if (parts.length === 1) {
+        [s] = parts;
+      }
+      const ms = parseInt(msPart.substring(0, 3).padEnd(3, "0"));
+      return (h * 3600 + m * 60 + s) * 1e3 + (parseInt(msPart) || 0);
+    } catch {
+      return 0;
+    }
+  }
+  async transcribeWithSegments(blob, prompt) {
     const formData = new FormData();
     formData.append("audio", blob);
-    return await lastValueFrom(this.http.post("/api/stt?segments=true", formData));
+    if (prompt) {
+      formData.append("prompt", prompt);
+    }
+    console.log(`[Diarization] Enviando blob de ${blob.size} bytes a STT...`);
+    const result = await lastValueFrom(this.http.post(`${this.baseUrl}/stt?segments=true`, formData));
+    console.log("[Diarization] Respuesta STT recibida");
+    return result;
   }
   formatTime(ms) {
-    const totalSec = Math.floor(ms / 1e3);
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    const date = new Date(ms);
+    return date.toISOString().substr(11, 8);
+  }
+  formatDuration(ms) {
+    const sec = Math.floor(ms / 1e3);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m ${s}s`;
+  }
+  smartMergeSegments(segments) {
+    if (segments.length === 0)
+      return [];
+    const merged = [];
+    let current = __spreadValues({}, segments[0]);
+    for (let i = 1; i < segments.length; i++) {
+      const next = segments[i];
+      const silenceGap = next.startMs - current.endMs;
+      if (next.speaker === current.speaker && silenceGap < 3e3) {
+        current.endMs = next.endMs;
+        const sep = current.text.match(/[.!?]$/) ? " " : " ";
+        current.text += sep + next.text;
+      } else {
+        merged.push(current);
+        current = __spreadValues({}, next);
+      }
+    }
+    merged.push(current);
+    return merged;
+  }
+  applyKeywordCorrection(text, prompt) {
+    if (!prompt || !text)
+      return text;
+    const keywords = prompt.split(/[,;\n]+/).map((k) => k.trim()).filter((k) => k.length > 3);
+    if (keywords.length === 0)
+      return text;
+    const words = text.split(/\s+/);
+    const correctedWords = words.map((word) => {
+      const cleanWord = word.replace(/[.,!?;:()"]/g, "");
+      if (cleanWord.length < 3)
+        return word;
+      for (const key of keywords) {
+        if (Math.abs(cleanWord.length - key.length) > 2)
+          continue;
+        const dist = this.levenshteinDistance(cleanWord.toLowerCase(), key.toLowerCase());
+        const maxLength = Math.max(cleanWord.length, key.length);
+        const similarity = 1 - dist / maxLength;
+        if (similarity >= 0.8 || dist <= 1 && maxLength >= 4) {
+          if (word === cleanWord)
+            return key;
+          return word.replace(cleanWord, key);
+        }
+      }
+      return word;
+    });
+    return correctedWords.join(" ");
+  }
+  levenshteinDistance(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++)
+      matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++)
+      matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+        }
+      }
+    }
+    return matrix[b.length][a.length];
   }
   static \u0275fac = function DiarizationService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _DiarizationService)();
@@ -53516,9 +53967,10 @@ var DiarizationService = class _DiarizationService {
 })();
 
 // src/app/voice/pages/lobby/lobby.page.ts
-function LobbyPage_section_10_div_34_Template(rf, ctx) {
+var _c02 = ["joinInput"];
+function LobbyPage_section_10_div_38_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 24)(1, "div", 25);
+    \u0275\u0275elementStart(0, "div", 27)(1, "div", 28);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd()();
   }
@@ -53531,13 +53983,13 @@ function LobbyPage_section_10_div_34_Template(rf, ctx) {
 function LobbyPage_section_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "section", 12)(1, "div", 13)(2, "h2");
+    \u0275\u0275elementStart(0, "section", 13)(1, "div", 14)(2, "h2");
     \u0275\u0275text(3, "Iniciar Sesi\xF3n");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 14);
+    \u0275\u0275elementStart(4, "div", 15);
     \u0275\u0275text(5, "Elige c\xF3mo quieres participar en la conversaci\xF3n.");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "div", 15)(7, "div", 16)(8, "h3");
+    \u0275\u0275elementStart(6, "div", 16)(7, "div", 17)(8, "h3");
     \u0275\u0275text(9, "Crear Sala");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(10, "p");
@@ -53545,7 +53997,7 @@ function LobbyPage_section_10_Template(rf, ctx) {
     \u0275\u0275element(12, "br");
     \u0275\u0275text(13, "Tu dispositivo procesar\xE1 el audio.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "button", 17);
+    \u0275\u0275elementStart(14, "button", 18);
     \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_14_listener() {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53553,8 +54005,8 @@ function LobbyPage_section_10_Template(rf, ctx) {
     });
     \u0275\u0275text(15, " Nueva Sala ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(16, "div", 18);
-    \u0275\u0275elementStart(17, "div", 16)(18, "h3");
+    \u0275\u0275element(16, "div", 19);
+    \u0275\u0275elementStart(17, "div", 17)(18, "h3");
     \u0275\u0275text(19, "Unirse a Sala");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(20, "p");
@@ -53562,10 +54014,10 @@ function LobbyPage_section_10_Template(rf, ctx) {
     \u0275\u0275element(22, "br");
     \u0275\u0275text(23, "usando su c\xF3digo.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(24, "div", 19)(25, "label");
+    \u0275\u0275elementStart(24, "div", 20)(25, "label");
     \u0275\u0275text(26, "Tu Nombre");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(27, "input", 20);
+    \u0275\u0275elementStart(27, "input", 21);
     \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_10_Template_input_ngModelChange_27_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -53573,35 +54025,48 @@ function LobbyPage_section_10_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(28, "div", 19)(29, "label");
+    \u0275\u0275elementStart(28, "div", 20)(29, "label");
     \u0275\u0275text(30, "C\xF3digo de Sala");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(31, "input", 21);
-    \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_10_Template_input_ngModelChange_31_listener($event) {
+    \u0275\u0275elementStart(31, "div", 22)(32, "input", 23, 0);
+    \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_10_Template_input_ngModelChange_32_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r1.joinCode, $event) || (ctx_r1.joinCode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(32, "button", 22);
-    \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_32_listener() {
+    \u0275\u0275listener("focus", function LobbyPage_section_10_Template_input_focus_32_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onCodeInputFocus());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(34, "button", 24);
+    \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_34_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.pasteCode());
+    });
+    \u0275\u0275text(35, " \u{1F4CB} ");
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(36, "button", 25);
+    \u0275\u0275listener("click", function LobbyPage_section_10_Template_button_click_36_listener() {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.joinSession());
     });
-    \u0275\u0275text(33);
+    \u0275\u0275text(37);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275template(34, LobbyPage_section_10_div_34_Template, 3, 1, "div", 23);
+    \u0275\u0275template(38, LobbyPage_section_10_div_38_Template, 3, 1, "div", 26);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275advance(27);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.myNick);
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(5);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.joinCode);
-    \u0275\u0275advance();
+    \u0275\u0275advance(4);
     \u0275\u0275property("disabled", ctx_r1.joinCode.length !== 6 || ctx_r1.isJoining);
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", ctx_r1.isJoining ? "Conectando..." : "Unirse", " ");
@@ -53611,55 +54076,97 @@ function LobbyPage_section_10_Template(rf, ctx) {
 }
 function LobbyPage_section_11_span_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 45);
+    \u0275\u0275elementStart(0, "span", 50);
     \u0275\u0275text(1, "\u{1F534} GRABANDO");
     \u0275\u0275elementEnd();
   }
 }
 function LobbyPage_section_11_div_7_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 14);
+    \u0275\u0275elementStart(0, "div", 15);
     \u0275\u0275text(1, "Comparte este c\xF3digo con los dem\xE1s:");
     \u0275\u0275elementEnd();
   }
 }
-function LobbyPage_section_11_div_10_Template(rf, ctx) {
+function LobbyPage_section_11_div_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 14);
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 51)(1, "div", 52);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "button", 53);
+    \u0275\u0275listener("click", function LobbyPage_section_11_div_8_Template_button_click_3_listener() {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.copyCode());
+    });
+    \u0275\u0275text(4, " \u{1F4CB} ");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.session.sessionId());
+  }
+}
+function LobbyPage_section_11_div_9_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 15);
     \u0275\u0275text(1, "Conectado a la sala. Esperando al anfitri\xF3n.");
     \u0275\u0275elementEnd();
   }
 }
-function LobbyPage_section_11_li_23_Template(rf, ctx) {
+function LobbyPage_section_11_li_22_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "li", 46)(1, "div", 35);
+    \u0275\u0275elementStart(0, "li", 54)(1, "div", 38);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 36)(4, "span", 37);
+    \u0275\u0275elementStart(3, "div", 39)(4, "span", 40);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "span", 38);
+    \u0275\u0275elementStart(6, "span", 41);
     \u0275\u0275text(7, "\u25CF Conectado");
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const p_r4 = ctx.$implicit;
+    const p_r5 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(p_r4.name.charAt(0));
+    \u0275\u0275textInterpolate(p_r5.name.charAt(0));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(p_r4.name);
+    \u0275\u0275textInterpolate(p_r5.name);
   }
 }
-function LobbyPage_section_11_button_27_Template(rf, ctx) {
+function LobbyPage_section_11_div_23_Template(rf, ctx) {
   if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 47);
-    \u0275\u0275listener("click", function LobbyPage_section_11_button_27_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r5);
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 55)(1, "label");
+    \u0275\u0275text(2, "Contexto / Palabras Clave");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "textarea", 56);
+    \u0275\u0275twoWayListener("ngModelChange", function LobbyPage_section_11_div_23_Template_textarea_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r6);
       const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.finishAndProcess());
+      \u0275\u0275twoWayBindingSet(ctx_r1.transcriptionPrompt, $event) || (ctx_r1.transcriptionPrompt = $event);
+      return \u0275\u0275resetView($event);
     });
-    \u0275\u0275text(1, " \u{1F4BE} Procesar y Guardar ");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.transcriptionPrompt);
+  }
+}
+function LobbyPage_section_11_button_25_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 57);
+    \u0275\u0275listener("click", function LobbyPage_section_11_button_25_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.triggerFileUpload());
+    });
+    \u0275\u0275text(1, " \u{1F4C2} ");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -53669,10 +54176,27 @@ function LobbyPage_section_11_button_27_Template(rf, ctx) {
 }
 function LobbyPage_section_11_button_28_Template(rf, ctx) {
   if (rf & 1) {
-    const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 47);
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 58);
     \u0275\u0275listener("click", function LobbyPage_section_11_button_28_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r6);
+      \u0275\u0275restoreView(_r8);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.finishAndProcess());
+    });
+    \u0275\u0275text(1, " \u{1F4BE} Procesar ");
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("disabled", ctx_r1.isProcessing);
+  }
+}
+function LobbyPage_section_11_button_29_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 58);
+    \u0275\u0275listener("click", function LobbyPage_section_11_button_29_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r1.toggleRecording());
     });
@@ -53687,9 +54211,9 @@ function LobbyPage_section_11_button_28_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r1.audio.isRecording() ? "\u25A0 Detener Grabaci\xF3n" : "\u25CF Iniciar Grabaci\xF3n", " ");
   }
 }
-function LobbyPage_section_11_div_29_Template(rf, ctx) {
+function LobbyPage_section_11_div_30_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 48);
+    \u0275\u0275elementStart(0, "div", 59);
     \u0275\u0275text(1, " Grabando audio... ");
     \u0275\u0275elementEnd();
   }
@@ -53697,40 +54221,39 @@ function LobbyPage_section_11_div_29_Template(rf, ctx) {
 function LobbyPage_section_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "section", 12)(1, "div", 13)(2, "div", 26)(3, "div", 27)(4, "span", 28);
+    \u0275\u0275elementStart(0, "section", 13)(1, "div", 14)(2, "div", 29)(3, "div", 30)(4, "span", 31);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(6, LobbyPage_section_11_span_6_Template, 2, 0, "span", 29);
+    \u0275\u0275template(6, LobbyPage_section_11_span_6_Template, 2, 0, "span", 32);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(7, LobbyPage_section_11_div_7_Template, 2, 0, "div", 30);
-    \u0275\u0275elementStart(8, "div", 31);
-    \u0275\u0275text(9);
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(10, LobbyPage_section_11_div_10_Template, 2, 0, "div", 30);
+    \u0275\u0275template(7, LobbyPage_section_11_div_7_Template, 2, 0, "div", 33)(8, LobbyPage_section_11_div_8_Template, 5, 1, "div", 34)(9, LobbyPage_section_11_div_9_Template, 2, 0, "div", 33);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "div", 32)(12, "label");
-    \u0275\u0275text(13);
+    \u0275\u0275elementStart(10, "div", 35)(11, "label");
+    \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "ul", 33)(15, "li", 34)(16, "div", 35);
-    \u0275\u0275text(17, "Yo");
+    \u0275\u0275elementStart(13, "ul", 36)(14, "li", 37)(15, "div", 38);
+    \u0275\u0275text(16, "Yo");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "div", 36)(19, "span", 37);
-    \u0275\u0275text(20);
+    \u0275\u0275elementStart(17, "div", 39)(18, "span", 40);
+    \u0275\u0275text(19);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "span", 38);
-    \u0275\u0275text(22, "\u25CF Online");
+    \u0275\u0275elementStart(20, "span", 41);
+    \u0275\u0275text(21, "\u25CF Online");
     \u0275\u0275elementEnd()()();
-    \u0275\u0275template(23, LobbyPage_section_11_li_23_Template, 8, 2, "li", 39);
+    \u0275\u0275template(22, LobbyPage_section_11_li_22_Template, 8, 2, "li", 42);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(24, "div", 40)(25, "button", 41);
-    \u0275\u0275listener("click", function LobbyPage_section_11_Template_button_click_25_listener() {
+    \u0275\u0275template(23, LobbyPage_section_11_div_23_Template, 4, 1, "div", 43);
+    \u0275\u0275elementStart(24, "div", 44);
+    \u0275\u0275template(25, LobbyPage_section_11_button_25_Template, 2, 1, "button", 45);
+    \u0275\u0275elementStart(26, "button", 46);
+    \u0275\u0275listener("click", function LobbyPage_section_11_Template_button_click_26_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.leave());
     });
-    \u0275\u0275text(26, " Abandonar Sala ");
+    \u0275\u0275text(27, " Abandonar ");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(27, LobbyPage_section_11_button_27_Template, 2, 1, "button", 42)(28, LobbyPage_section_11_button_28_Template, 2, 4, "button", 43)(29, LobbyPage_section_11_div_29_Template, 2, 0, "div", 44);
+    \u0275\u0275template(28, LobbyPage_section_11_button_28_Template, 2, 1, "button", 47)(29, LobbyPage_section_11_button_29_Template, 2, 4, "button", 48)(30, LobbyPage_section_11_div_30_Template, 2, 0, "div", 49);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -53743,8 +54266,8 @@ function LobbyPage_section_11_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.audio.isRecording());
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r1.session.isHost());
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.session.sessionId());
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.session.isHost());
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r1.session.isHost());
     \u0275\u0275advance(3);
@@ -53753,7 +54276,11 @@ function LobbyPage_section_11_Template(rf, ctx) {
     \u0275\u0275textInterpolate2("", ctx_r1.myNick, " ", ctx_r1.session.isHost() ? "(Host)" : "");
     \u0275\u0275advance(3);
     \u0275\u0275property("ngForOf", ctx_r1.session.participants());
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.session.isHost() && !ctx_r1.audio.isRecording());
     \u0275\u0275advance(2);
+    \u0275\u0275property("ngIf", ctx_r1.session.isHost() && !ctx_r1.audio.isRecording() && ctx_r1.session.getAllRecordedBlobs().length === 0);
+    \u0275\u0275advance();
     \u0275\u0275property("disabled", ctx_r1.audio.isRecording());
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", ctx_r1.session.isHost() && !ctx_r1.audio.isRecording() && ctx_r1.session.getAllRecordedBlobs().length > 0);
@@ -53765,8 +54292,8 @@ function LobbyPage_section_11_Template(rf, ctx) {
 }
 function LobbyPage_div_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 49);
-    \u0275\u0275element(1, "div", 50);
+    \u0275\u0275elementStart(0, "div", 60);
+    \u0275\u0275element(1, "div", 61);
     \u0275\u0275elementStart(2, "h3");
     \u0275\u0275text(3, "Conectando...");
     \u0275\u0275elementEnd();
@@ -53777,31 +54304,31 @@ function LobbyPage_div_12_Template(rf, ctx) {
 }
 function LobbyPage_div_13_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 49);
-    \u0275\u0275element(1, "div", 50);
+    \u0275\u0275elementStart(0, "div", 60);
+    \u0275\u0275element(1, "div", 61);
     \u0275\u0275elementStart(2, "h3");
     \u0275\u0275text(3, "Procesando...");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "p");
     \u0275\u0275text(5, "Transcribiendo y combinando audios.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "p", 14);
+    \u0275\u0275elementStart(6, "p", 15);
     \u0275\u0275text(7, "Esto puede tardar unos minutos.");
     \u0275\u0275elementEnd()();
   }
 }
 function LobbyPage_div_14_Template(rf, ctx) {
   if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 51)(1, "div", 52)(2, "div", 53)(3, "div", 5);
-    \u0275\u0275text(4, "Guardado Exitoso");
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 62)(1, "div", 63)(2, "div", 64)(3, "div", 6);
+    \u0275\u0275text(4, "\u2705 Guardado Exitoso");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(5, "div", 54)(6, "div", 55);
+    \u0275\u0275elementStart(5, "div", 65)(6, "div", 66);
     \u0275\u0275text(7, "La conversaci\xF3n se ha procesado y guardado correctamente en tu historial.");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "div", 56)(9, "button", 17);
+    \u0275\u0275elementStart(8, "div", 67)(9, "button", 18);
     \u0275\u0275listener("click", function LobbyPage_div_14_Template_button_click_9_listener() {
-      \u0275\u0275restoreView(_r7);
+      \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.goToHistory());
     });
@@ -53824,6 +54351,7 @@ var LobbyPage = class _LobbyPage {
   audio = inject2(AudioCaptureService);
   diarization = inject2(DiarizationService);
   router = inject2(Router);
+  joinInput;
   // Estado local para UI
   mode = "none";
   joinCode = "";
@@ -53831,6 +54359,8 @@ var LobbyPage = class _LobbyPage {
   isJoining = false;
   isProcessing = false;
   showSuccessModal = false;
+  transcriptionPrompt = "";
+  // Contexto para Whisper
   get drawerOpen() {
     return this.mode !== "none";
   }
@@ -53862,6 +54392,41 @@ var LobbyPage = class _LobbyPage {
       this.isJoining = false;
     }
   }
+  async copyCode() {
+    const code = this.session.sessionId();
+    if (!code)
+      return;
+    try {
+      await navigator.clipboard.writeText(code);
+      console.log("C\xF3digo copiado");
+    } catch (e) {
+      console.error("Error copiando:", e);
+    }
+  }
+  async pasteCode() {
+    console.log("Intento de pegar c\xF3digo...");
+    this.joinInput?.nativeElement.focus();
+    await this.readClipboardIntoCode();
+  }
+  /** Auto-paste al hacer focus en el input si está vacío */
+  async onCodeInputFocus() {
+    if (this.joinCode.length === 0) {
+      await this.readClipboardIntoCode();
+    }
+  }
+  async readClipboardIntoCode() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        const cleaned = text.trim().substring(0, 6).toUpperCase();
+        if (cleaned.length === 6) {
+          this.joinCode = cleaned;
+        }
+      }
+    } catch (e) {
+      console.warn("Permiso de portapapeles denegado o error:", e);
+    }
+  }
   async toggleRecording() {
     if (!this.session.isHost())
       return;
@@ -53876,7 +54441,7 @@ var LobbyPage = class _LobbyPage {
       return;
     this.isProcessing = true;
     try {
-      const success = await this.diarization.processSessionAndSave();
+      const success = await this.diarization.processSessionAndSave(this.transcriptionPrompt);
       if (success) {
         this.showSuccessModal = true;
       } else {
@@ -53885,6 +54450,35 @@ var LobbyPage = class _LobbyPage {
     } catch (e) {
       console.error(e);
       alert("Error procesando sesi\xF3n: " + e);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+  triggerFileUpload() {
+    const input2 = document.createElement("input");
+    input2.type = "file";
+    input2.accept = "audio/*";
+    input2.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.processFile(file);
+      }
+    };
+    input2.click();
+  }
+  async processFile(file) {
+    this.isProcessing = true;
+    try {
+      console.log("Procesando archivo importado:", file.name);
+      const success = await this.diarization.processFileAndSave(file, this.transcriptionPrompt);
+      if (success) {
+        this.showSuccessModal = true;
+      } else {
+        alert("No se pudo procesar el archivo.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error procesando archivo: " + e);
     } finally {
       this.isProcessing = false;
     }
@@ -53912,34 +54506,42 @@ var LobbyPage = class _LobbyPage {
   static \u0275fac = function LobbyPage_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _LobbyPage)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LobbyPage, selectors: [["app-lobby-page"]], decls: 18, vars: 9, consts: [["brandName", "Escriba", "subtitle", "Diarizaci\xF3n", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], ["class", "panel", 4, "ngIf"], ["class", "loading-overlay", 4, "ngIf"], ["class", "overlay", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "actions-grid"], [1, "action-col"], [1, "btn", "btn-primary", 3, "click"], [1, "divider-v"], [1, "form-group"], ["type", "text", "placeholder", "Ej. Juan", 3, "ngModelChange", "ngModel"], ["type", "text", "placeholder", "######", "maxlength", "6", 1, "code-input", 3, "ngModelChange", "ngModel"], [1, "btn", 3, "click", "disabled"], ["class", "box", "style", "margin-top: 20px; border-color: #ff4d4f; background: rgba(255,77,79,0.1);", 4, "ngIf"], [1, "box", 2, "margin-top", "20px", "border-color", "#ff4d4f", "background", "rgba(255,77,79,0.1)"], [2, "color", "#ff4d4f", "font-weight", "bold", "text-align", "center"], [1, "session-info"], [1, "badges"], [1, "role-badge"], ["class", "rec-badge", 4, "ngIf"], ["class", "hint", 4, "ngIf"], [1, "session-code"], [1, "box"], [1, "participants-list"], [1, "p-item", "me"], [1, "p-avatar"], [1, "p-info"], [1, "p-name"], [1, "p-status"], ["class", "p-item", 4, "ngFor", "ngForOf"], [1, "controls-bar"], [1, "btn", "btn-danger", 3, "click", "disabled"], ["class", "btn btn-primary", 3, "disabled", "click", 4, "ngIf"], ["class", "btn btn-primary", 3, "recording", "disabled", "click", 4, "ngIf"], ["class", "recording-status", 4, "ngIf"], [1, "rec-badge"], [1, "p-item"], [1, "btn", "btn-primary", 3, "click", "disabled"], [1, "recording-status"], [1, "loading-overlay"], [1, "spinner"], [1, "overlay"], [1, "modal"], [1, "header"], [1, "body"], [1, "text"], [1, "footer"]], template: function LobbyPage_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _LobbyPage, selectors: [["app-lobby-page"]], viewQuery: function LobbyPage_Query(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275elementStart(0, "app-top-nav-bar", 0);
+      \u0275\u0275viewQuery(_c02, 5);
+    }
+    if (rf & 2) {
+      let _t;
+      \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.joinInput = _t.first);
+    }
+  }, decls: 18, vars: 9, consts: [["joinInput", ""], ["brandName", "Escriba", "subtitle", "Diarizaci\xF3n", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], ["class", "panel", 4, "ngIf"], ["class", "loading-overlay", 4, "ngIf"], ["class", "overlay", 4, "ngIf"], ["width", "420px", 3, "close", "open", "title"], [4, "ngIf"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "actions-grid"], [1, "action-col"], [1, "btn", "btn-primary", 3, "click"], [1, "divider-v"], [1, "form-group"], ["type", "text", "placeholder", "Ej. Juan", 3, "ngModelChange", "ngModel"], [1, "input-with-action"], ["type", "text", "placeholder", "######", "maxlength", "6", 1, "code-input", 3, "ngModelChange", "focus", "ngModel"], ["title", "Pegar del portapapeles", 1, "btn-icon", 3, "click"], [1, "btn", 3, "click", "disabled"], ["class", "box", "style", "margin-top: 20px; border-color: #ff4d4f; background: rgba(255,77,79,0.1);", 4, "ngIf"], [1, "box", 2, "margin-top", "20px", "border-color", "#ff4d4f", "background", "rgba(255,77,79,0.1)"], [2, "color", "#ff4d4f", "font-weight", "bold", "text-align", "center"], [1, "session-info"], [1, "badges"], [1, "role-badge"], ["class", "rec-badge", 4, "ngIf"], ["class", "hint", 4, "ngIf"], ["class", "code-container", 4, "ngIf"], [1, "box"], [1, "participants-list"], [1, "p-item", "me"], [1, "p-avatar"], [1, "p-info"], [1, "p-name"], [1, "p-status"], ["class", "p-item", 4, "ngFor", "ngForOf"], ["class", "context-box", "style", "margin-top: 15px; margin-bottom: 15px;", 4, "ngIf"], [1, "controls-bar"], ["class", "btn-icon-large", "title", "Cargar Audio Grabado (Debug)", 3, "disabled", "click", 4, "ngIf"], [1, "btn", "btn-danger", 3, "click", "disabled"], ["class", "btn btn-primary", 3, "disabled", "click", 4, "ngIf"], ["class", "btn btn-primary", 3, "recording", "disabled", "click", 4, "ngIf"], ["class", "recording-status", 4, "ngIf"], [1, "rec-badge"], [1, "code-container"], [1, "session-code"], ["type", "button", "title", "Copiar c\xF3digo", 1, "btn-icon", 3, "click"], [1, "p-item"], [1, "context-box", 2, "margin-top", "15px", "margin-bottom", "15px"], ["placeholder", "Ej: Warhammer 40k, Aeldari, Torbellino...", "rows", "2", 3, "ngModelChange", "ngModel"], ["title", "Cargar Audio Grabado (Debug)", 1, "btn-icon-large", 3, "click", "disabled"], [1, "btn", "btn-primary", 3, "click", "disabled"], [1, "recording-status"], [1, "loading-overlay"], [1, "spinner"], [1, "overlay"], [1, "modal", "success-modal"], [1, "header"], [1, "body"], [1, "text"], [1, "footer"]], template: function LobbyPage_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "app-top-nav-bar", 1);
       \u0275\u0275listener("profileClick", function LobbyPage_Template_app_top_nav_bar_profileClick_0_listener() {
         return ctx.openProfile();
       })("settingsClick", function LobbyPage_Template_app_top_nav_bar_settingsClick_0_listener() {
         return ctx.openSettings();
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(1, "main", 1)(2, "div", 2)(3, "button", 3);
+      \u0275\u0275elementStart(1, "main", 2)(2, "div", 3)(3, "button", 4);
       \u0275\u0275listener("click", function LobbyPage_Template_button_click_3_listener() {
         return ctx.back();
       });
       \u0275\u0275text(4, " \u2190 Volver ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(5, "div", 4)(6, "div", 5);
+      \u0275\u0275elementStart(5, "div", 5)(6, "div", 6);
       \u0275\u0275text(7, "Conversaci\xF3n");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(8, "div", 6);
+      \u0275\u0275elementStart(8, "div", 7);
       \u0275\u0275text(9, "Sala multi-hablante");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275template(10, LobbyPage_section_10_Template, 35, 5, "section", 7)(11, LobbyPage_section_11_Template, 30, 15, "section", 7)(12, LobbyPage_div_12_Template, 6, 0, "div", 8)(13, LobbyPage_div_13_Template, 8, 0, "div", 8)(14, LobbyPage_div_14_Template, 11, 0, "div", 9);
+      \u0275\u0275template(10, LobbyPage_section_10_Template, 39, 5, "section", 8)(11, LobbyPage_section_11_Template, 31, 17, "section", 8)(12, LobbyPage_div_12_Template, 6, 0, "div", 9)(13, LobbyPage_div_13_Template, 8, 0, "div", 9)(14, LobbyPage_div_14_Template, 11, 0, "div", 10);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(15, "app-right-drawer", 10);
+      \u0275\u0275elementStart(15, "app-right-drawer", 11);
       \u0275\u0275listener("close", function LobbyPage_Template_app_right_drawer_close_15_listener() {
         return ctx.closeDrawer();
       });
-      \u0275\u0275template(16, LobbyPage_app_profile_panel_16_Template, 1, 0, "app-profile-panel", 11)(17, LobbyPage_app_settings_panel_17_Template, 1, 0, "app-settings-panel", 11);
+      \u0275\u0275template(16, LobbyPage_app_profile_panel_16_Template, 1, 0, "app-profile-panel", 12)(17, LobbyPage_app_settings_panel_17_Template, 1, 0, "app-settings-panel", 12);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -53973,7 +54575,7 @@ var LobbyPage = class _LobbyPage {
     RightDrawerComponent,
     ProfilePanelComponent,
     SettingsPanelComponent
-  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header[_ngcontent-%COMP%] {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint[_ngcontent-%COMP%] {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v[_ngcontent-%COMP%] {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text][_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn[_ngcontent-%COMP%]:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn[_ngcontent-%COMP%]:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary[_ngcontent-%COMP%]:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording[_ngcontent-%COMP%] {\n  background: #ff4d4f;\n  color: white;\n  animation: _ngcontent-%COMP%_pulse 2s infinite;\n}\n@keyframes _ngcontent-%COMP%_pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger[_ngcontent-%COMP%] {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: _ngcontent-%COMP%_blink 1s infinite alternate;\n}\n@keyframes _ngcontent-%COMP%_blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list[_ngcontent-%COMP%] {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me[_ngcontent-%COMP%] {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name[_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status[_ngcontent-%COMP%] {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: _ngcontent-%COMP%_blink 2s infinite;\n}\n.loading-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner[_ngcontent-%COMP%] {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v[_ngcontent-%COMP%] {\n    height: 1px;\n    width: 100%;\n  }\n}\n.overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal[_ngcontent-%COMP%] {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: _ngcontent-%COMP%_slideUp 0.2s ease-out;\n}\n.header[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title[_ngcontent-%COMP%] {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body[_ngcontent-%COMP%] {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */"] });
+  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header[_ngcontent-%COMP%] {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint[_ngcontent-%COMP%] {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box[_ngcontent-%COMP%] {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v[_ngcontent-%COMP%] {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text][_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn[_ngcontent-%COMP%]:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn[_ngcontent-%COMP%]:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary[_ngcontent-%COMP%]:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording[_ngcontent-%COMP%] {\n  background: #ff4d4f;\n  color: white;\n  animation: _ngcontent-%COMP%_pulse 2s infinite;\n}\n@keyframes _ngcontent-%COMP%_pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger[_ngcontent-%COMP%] {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code[_ngcontent-%COMP%] {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host[_ngcontent-%COMP%] {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: _ngcontent-%COMP%_blink 1s infinite alternate;\n}\n@keyframes _ngcontent-%COMP%_blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list[_ngcontent-%COMP%] {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me[_ngcontent-%COMP%] {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name[_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status[_ngcontent-%COMP%] {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: _ngcontent-%COMP%_blink 2s infinite;\n}\n.loading-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner[_ngcontent-%COMP%] {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v[_ngcontent-%COMP%] {\n    height: 1px;\n    width: 100%;\n  }\n}\n.context-box[_ngcontent-%COMP%] {\n  flex: 1;\n  min-width: 200px;\n  margin: 0 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.context-box[_ngcontent-%COMP%]   textarea[_ngcontent-%COMP%] {\n  width: 100%;\n  background: rgba(0, 0, 0, 0.2);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  color: var(--text);\n  border-radius: 8px;\n  padding: 8px;\n  font-family: inherit;\n  resize: vertical;\n}\n.context-box[_ngcontent-%COMP%]   textarea[_ngcontent-%COMP%]:focus {\n  outline: none;\n  border-color: var(--brand);\n}\n.overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal[_ngcontent-%COMP%] {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: _ngcontent-%COMP%_slideUp 0.2s ease-out;\n}\n.header[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title[_ngcontent-%COMP%] {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body[_ngcontent-%COMP%] {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes _ngcontent-%COMP%_slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n.code-container[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  justify-content: center;\n}\n.input-with-action[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 8px;\n  width: 100%;\n}\n.btn-icon[_ngcontent-%COMP%] {\n  background: rgba(255, 255, 255, 0.1);\n  border: 1px solid rgba(255, 255, 255, 0.2);\n  color: var(--text);\n  border-radius: 8px;\n  width: 42px;\n  height: 42px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 20px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.btn-icon[_ngcontent-%COMP%]:hover {\n  background: rgba(255, 255, 255, 0.2);\n  border-color: var(--brand);\n}\n.success-modal[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  color: #52c41a;\n}\n/*# sourceMappingURL=lobby.page.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LobbyPage, [{
@@ -54032,7 +54634,13 @@ var LobbyPage = class _LobbyPage {
 \r
                 <div class="form-group">\r
                     <label>C\xF3digo de Sala</label>\r
-                    <input type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######" maxlength="6" />\r
+                    <div class="input-with-action">\r
+                        <input #joinInput type="text" class="code-input" [(ngModel)]="joinCode" placeholder="######"\r
+                            maxlength="6" (focus)="onCodeInputFocus()" />\r
+                        <button class="btn-icon" (click)="pasteCode()" title="Pegar del portapapeles">\r
+                            \u{1F4CB}\r
+                        </button>\r
+                    </div>\r
                 </div>\r
 \r
                 <button class="btn" [disabled]="joinCode.length !== 6 || isJoining" (click)="joinSession()">\r
@@ -54062,7 +54670,13 @@ var LobbyPage = class _LobbyPage {
                 </div>\r
 \r
                 <div class="hint" *ngIf="session.isHost()">Comparte este c\xF3digo con los dem\xE1s:</div>\r
-                <div class="session-code">{{ session.sessionId() }}</div>\r
+                <div class="code-container" *ngIf="session.isHost()">\r
+                    <div class="session-code">{{ session.sessionId() }}</div>\r
+                    <button class="btn-icon" type="button" (click)="copyCode()" title="Copiar c\xF3digo">\r
+                        \u{1F4CB}\r
+                    </button>\r
+                </div>\r
+                <!-- Mostrar c\xF3digo tambi\xE9n si soy invitado para verlo? No, el dise\xF1o original no lo ten\xEDa, pero es \xFAtil. -->\r
                 <div class="hint" *ngIf="!session.isHost()">Conectado a la sala. Esperando al anfitri\xF3n.</div>\r
             </div>\r
         </div>\r
@@ -54089,16 +54703,31 @@ var LobbyPage = class _LobbyPage {
             </ul>\r
         </div>\r
 \r
+        <!-- Contexto para Host (Movido fuera de controls) -->\r
+        <div class="context-box" *ngIf="session.isHost() && !audio.isRecording()"\r
+            style="margin-top: 15px; margin-bottom: 15px;">\r
+            <label>Contexto / Palabras Clave</label>\r
+            <textarea [(ngModel)]="transcriptionPrompt" placeholder="Ej: Warhammer 40k, Aeldari, Torbellino..."\r
+                rows="2"></textarea>\r
+        </div>\r
+\r
         <div class="controls-bar">\r
+            <!-- Acci\xF3n Host: Cargar Archivo (Icono peque\xF1o para ahorrar espacio) -->\r
+            <button class="btn-icon-large"\r
+                *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length === 0"\r
+                (click)="triggerFileUpload()" [disabled]="isProcessing" title="Cargar Audio Grabado (Debug)">\r
+                \u{1F4C2}\r
+            </button>\r
+\r
             <button class="btn btn-danger" (click)="leave()" [disabled]="audio.isRecording()">\r
-                Abandonar Sala\r
+                Abandonar\r
             </button>\r
 \r
             <!-- Acci\xF3n Host: Procesar -->\r
             <button class="btn btn-primary"\r
                 *ngIf="session.isHost() && !audio.isRecording() && session.getAllRecordedBlobs().length > 0"\r
                 (click)="finishAndProcess()" [disabled]="isProcessing">\r
-                \u{1F4BE} Procesar y Guardar\r
+                \u{1F4BE} Procesar\r
             </button>\r
 \r
             <!-- Acci\xF3n Host: Grabar -->\r
@@ -54130,9 +54759,9 @@ var LobbyPage = class _LobbyPage {
 \r
     <!-- Modal de \xC9xito Personalizado -->\r
     <div class="overlay" *ngIf="showSuccessModal">\r
-        <div class="modal">\r
+        <div class="modal success-modal">\r
             <div class="header">\r
-                <div class="title">Guardado Exitoso</div>\r
+                <div class="title">\u2705 Guardado Exitoso</div>\r
             </div>\r
             <div class="body">\r
                 <div class="text">La conversaci\xF3n se ha procesado y guardado correctamente en tu historial.</div>\r
@@ -54147,11 +54776,475 @@ var LobbyPage = class _LobbyPage {
 <app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">\r
     <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>\r
     <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>\r
-</app-right-drawer>`, styles: ["/* src/app/voice/pages/lobby/lobby.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header h2 {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col h3 {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col p {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording {\n  background: #ff4d4f;\n  color: white;\n  animation: pulse 2s infinite;\n}\n@keyframes pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: blink 1s infinite alternate;\n}\n@keyframes blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: blink 2s infinite;\n}\n.loading-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v {\n    height: 1px;\n    width: 100%;\n  }\n}\n.overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: fadeIn 0.2s ease-out;\n}\n.modal {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: slideUp 0.2s ease-out;\n}\n.header {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=lobby.page.css.map */\n"] }]
-  }], () => [], null);
+</app-right-drawer>`, styles: ["/* src/app/voice/pages/lobby/lobby.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.14);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  cursor: pointer;\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n  color: var(--text);\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border: 1px solid rgba(242, 230, 201, 0.12);\n  background:\n    linear-gradient(\n      180deg,\n      rgba(255, 255, 255, 0.04),\n      rgba(255, 255, 255, 0.02));\n  border-radius: var(--radius);\n  padding: 14px;\n  max-width: 800px;\n  margin: 0 auto;\n}\n.panel__header {\n  margin-bottom: 24px;\n  text-align: center;\n}\n.panel__header h2 {\n  margin: 0 0 4px;\n  font-size: 18px;\n  color: var(--brand);\n}\n.hint {\n  color: var(--muted);\n  font-size: 14px;\n}\n.box {\n  border: 1px solid rgba(242, 230, 201, 0.1);\n  background: rgba(0, 0, 0, 0.1);\n  border-radius: 12px;\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.actions-grid {\n  display: grid;\n  grid-template-columns: 1fr 1px 1fr;\n  gap: 24px;\n  align-items: start;\n}\n.divider-v {\n  background: rgba(242, 230, 201, 0.1);\n  height: 100%;\n  width: 1px;\n}\n.action-col {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 12px;\n  text-align: center;\n}\n.action-col h3 {\n  margin: 0;\n  font-size: 16px;\n  color: var(--text);\n}\n.action-col p {\n  margin: 0;\n  font-size: 13px;\n  color: var(--muted);\n  line-height: 1.4;\n}\n.form-group {\n  width: 100%;\n  max-width: 240px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\nlabel {\n  font-weight: 700;\n  font-size: 12px;\n  text-transform: uppercase;\n  color: var(--muted);\n}\ninput[type=text] {\n  width: 100%;\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.03);\n  color: var(--text);\n  text-align: center;\n  font-size: 15px;\n}\ninput.code-input {\n  font-family: monospace;\n  font-size: 20px;\n  letter-spacing: 2px;\n  text-transform: uppercase;\n  font-weight: 700;\n}\n.btn {\n  padding: 12px 24px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, 0.16);\n  background: rgba(255, 255, 255, 0.05);\n  color: var(--text);\n  cursor: pointer;\n  font-weight: 600;\n  transition: all 0.2s;\n  width: 100%;\n  max-width: 200px;\n}\n.btn:hover:not(:disabled) {\n  background: rgba(255, 255, 255, 0.1);\n  border-color: rgba(242, 230, 201, 0.28);\n}\n.btn:disabled {\n  opacity: 0.5;\n  cursor: not-allowed;\n}\n.btn-primary {\n  background: var(--brand);\n  color: #000;\n  border: none;\n}\n.btn-primary:hover:not(:disabled) {\n  filter: brightness(1.1);\n  background: var(--brand);\n}\n.btn-primary.recording {\n  background: #ff4d4f;\n  color: white;\n  animation: pulse 2s infinite;\n}\n@keyframes pulse {\n  0% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);\n  }\n  70% {\n    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);\n  }\n  100% {\n    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);\n  }\n}\n.btn-danger {\n  background: rgba(255, 77, 79, 0.1);\n  border-color: rgba(255, 77, 79, 0.3);\n  color: #ff4d4f;\n}\n.btn-danger:hover {\n  background: rgba(255, 77, 79, 0.2);\n}\n.session-info {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 8px;\n}\n.badges {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n.session-code {\n  font-family: monospace;\n  font-size: 32px;\n  font-weight: 700;\n  color: var(--brand);\n  letter-spacing: 4px;\n  background: rgba(0, 0, 0, 0.2);\n  padding: 8px 16px;\n  border-radius: 8px;\n  border: 1px dashed rgba(242, 230, 201, 0.3);\n}\n.role-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: rgba(255, 255, 255, 0.1);\n  text-transform: uppercase;\n  letter-spacing: 1px;\n}\n.role-badge.host {\n  background: var(--brand);\n  color: #000;\n  font-weight: 700;\n}\n.rec-badge {\n  font-size: 11px;\n  padding: 4px 8px;\n  border-radius: 4px;\n  background: #ff4d4f;\n  color: white;\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  animation: blink 1s infinite alternate;\n}\n@keyframes blink {\n  from {\n    opacity: 1;\n  }\n  to {\n    opacity: 0.6;\n  }\n}\n.participants-list {\n  list-style: none;\n  padding: 0;\n  margin: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n  gap: 12px;\n}\n.p-item {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  padding: 10px;\n  background: rgba(255, 255, 255, 0.03);\n  border: 1px solid rgba(255, 255, 255, 0.05);\n  border-radius: 12px;\n}\n.p-item.me {\n  border-color: var(--brand);\n  background: rgba(var(--brand-rgb), 0.05);\n}\n.p-avatar {\n  width: 36px;\n  height: 36px;\n  background: rgba(255, 255, 255, 0.1);\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-weight: 700;\n  color: var(--text);\n}\n.p-info {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n}\n.p-name {\n  font-weight: 600;\n  font-size: 14px;\n}\n.p-status {\n  font-size: 11px;\n  color: #52c41a;\n}\n.controls-bar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-top: 24px;\n  padding-top: 24px;\n  border-top: 1px solid rgba(255, 255, 255, 0.1);\n}\n.recording-status {\n  color: #ff4d4f;\n  font-weight: 700;\n  animation: blink 2s infinite;\n}\n.loading-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.8);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  align-items: center;\n  justify-content: center;\n  z-index: 100;\n}\n.spinner {\n  width: 40px;\n  height: 40px;\n  border: 3px solid rgba(255, 255, 255, 0.1);\n  border-top-color: var(--brand);\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n@media (max-width: 650px) {\n  .actions-grid {\n    grid-template-columns: 1fr;\n    gap: 32px;\n  }\n  .divider-v {\n    height: 1px;\n    width: 100%;\n  }\n}\n.context-box {\n  flex: 1;\n  min-width: 200px;\n  margin: 0 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.context-box textarea {\n  width: 100%;\n  background: rgba(0, 0, 0, 0.2);\n  border: 1px solid rgba(255, 255, 255, 0.1);\n  color: var(--text);\n  border-radius: 8px;\n  padding: 8px;\n  font-family: inherit;\n  resize: vertical;\n}\n.context-box textarea:focus {\n  outline: none;\n  border-color: var(--brand);\n}\n.overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(0, 0, 0, 0.6);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n  animation: fadeIn 0.2s ease-out;\n}\n.modal {\n  background: #1a1a1a;\n  border: 1px solid rgba(242, 230, 201, 0.2);\n  border-radius: 12px;\n  width: 90%;\n  max-width: 400px;\n  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);\n  overflow: hidden;\n  animation: slideUp 0.2s ease-out;\n}\n.header {\n  padding: 16px 20px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  background: rgba(255, 255, 255, 0.02);\n}\n.title {\n  font-size: 18px;\n  font-weight: 600;\n  color: var(--text);\n  margin: 0;\n}\n.body {\n  padding: 24px 20px;\n  color: var(--muted);\n  font-size: 15px;\n  line-height: 1.5;\n}\n.footer {\n  padding: 16px 20px;\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  background: rgba(0, 0, 0, 0.2);\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n@keyframes slideUp {\n  from {\n    transform: translateY(10px);\n    opacity: 0;\n  }\n  to {\n    transform: translateY(0);\n    opacity: 1;\n  }\n}\n.code-container {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  justify-content: center;\n}\n.input-with-action {\n  display: flex;\n  gap: 8px;\n  width: 100%;\n}\n.btn-icon {\n  background: rgba(255, 255, 255, 0.1);\n  border: 1px solid rgba(255, 255, 255, 0.2);\n  color: var(--text);\n  border-radius: 8px;\n  width: 42px;\n  height: 42px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 20px;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.btn-icon:hover {\n  background: rgba(255, 255, 255, 0.2);\n  border-color: var(--brand);\n}\n.success-modal .title {\n  color: #52c41a;\n}\n/*# sourceMappingURL=lobby.page.css.map */\n"] }]
+  }], () => [], { joinInput: [{
+    type: ViewChild,
+    args: ["joinInput"]
+  }] });
 })();
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LobbyPage, { className: "LobbyPage", filePath: "src/app/voice/pages/lobby/lobby.page.ts", lineNumber: 29 });
+})();
+
+// src/app/history/pages/preview/preview.page.ts
+function PreviewPage_div_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 11)(1, "div", 12)(2, "div", 13);
+    \u0275\u0275text(3, "Cargando\u2026");
+    \u0275\u0275elementEnd()()();
+  }
+}
+function PreviewPage_div_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 11)(1, "div", 12)(2, "div", 14);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r0.errorMsg);
+  }
+}
+function PreviewPage_ng_container_12_section_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "section", 11)(1, "div", 12)(2, "h2");
+    \u0275\u0275text(3, "Audio");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "div", 16);
+    \u0275\u0275element(5, "audio", 21);
+    \u0275\u0275elementStart(6, "div", 18)(7, "button", 20);
+    \u0275\u0275listener("click", function PreviewPage_ng_container_12_section_1_Template_button_click_7_listener() {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.downloadAudio());
+    });
+    \u0275\u0275text(8, " \u{1F3B5} Descargar Audio ");
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(5);
+    \u0275\u0275property("src", ctx_r0.audioUrl, \u0275\u0275sanitizeUrl);
+  }
+}
+function PreviewPage_ng_container_12_div_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 22);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r0.saveMsg);
+  }
+}
+function PreviewPage_ng_container_12_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275template(1, PreviewPage_ng_container_12_section_1_Template, 9, 1, "section", 7);
+    \u0275\u0275elementStart(2, "section", 11)(3, "div", 12)(4, "h2");
+    \u0275\u0275text(5, "Transcripci\xF3n");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(6, PreviewPage_ng_container_12_div_6_Template, 2, 1, "div", 15);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "div", 16)(8, "textarea", 17);
+    \u0275\u0275twoWayListener("ngModelChange", function PreviewPage_ng_container_12_Template_textarea_ngModelChange_8_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.editableText, $event) || (ctx_r0.editableText = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "div", 18)(10, "button", 19);
+    \u0275\u0275listener("click", function PreviewPage_ng_container_12_Template_button_click_10_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.saveText());
+    });
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "button", 20);
+    \u0275\u0275listener("click", function PreviewPage_ng_container_12_Template_button_click_12_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.downloadText());
+    });
+    \u0275\u0275text(13, " \u{1F4C4} Descargar Texto ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(14, "button", 20);
+    \u0275\u0275listener("click", function PreviewPage_ng_container_12_Template_button_click_14_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.shareItem());
+    });
+    \u0275\u0275text(15, " \u2934 Compartir ");
+    \u0275\u0275elementEnd()()()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r0.hasAudio);
+    \u0275\u0275advance(5);
+    \u0275\u0275property("ngIf", ctx_r0.saveMsg);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.editableText);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("disabled", ctx_r0.isSaving);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r0.isSaving ? "Guardando\u2026" : "\u{1F4BE} Guardar cambios", " ");
+  }
+}
+function PreviewPage_app_profile_panel_15_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "app-profile-panel");
+  }
+}
+function PreviewPage_app_settings_panel_16_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "app-settings-panel");
+  }
+}
+var PreviewPage = class _PreviewPage {
+  store = inject2(HISTORY_STORE);
+  cdr = inject2(ChangeDetectorRef);
+  downloadService = inject2(HistoryDownloadService);
+  router = inject2(Router);
+  route = inject2(ActivatedRoute);
+  r2 = inject2(Renderer2);
+  mode = "none";
+  item = null;
+  loading = true;
+  errorMsg = "";
+  // Editable text
+  editableText = "";
+  isSaving = false;
+  saveMsg = "";
+  // Audio
+  audioUrl = null;
+  // Share modal
+  shareModalOpen = false;
+  shareModalTitle = "";
+  shareModalText = "";
+  get drawerOpen() {
+    return this.mode !== "none";
+  }
+  get drawerTitle() {
+    return this.mode === "profile" ? "Perfil" : "Configuraci\xF3n";
+  }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get("id");
+    if (id) {
+      void this.loadItem(id);
+    } else {
+      this.loading = false;
+      this.errorMsg = "ID no proporcionado";
+    }
+  }
+  ngOnDestroy() {
+    if (this.audioUrl) {
+      URL.revokeObjectURL(this.audioUrl);
+    }
+    this.unlockScroll();
+  }
+  async loadItem(id) {
+    this.loading = true;
+    this.cdr.detectChanges();
+    try {
+      const categories = ["stt", "tts", "diarization", "summaries"];
+      let found = null;
+      for (const cat of categories) {
+        const items = await this.store.list({ category: cat, limit: 1e3, offset: 0 });
+        const match2 = items.find((i) => i.id === id);
+        if (match2) {
+          found = match2;
+          break;
+        }
+      }
+      this.item = found;
+      if (!this.item) {
+        this.errorMsg = "Registro no encontrado";
+      } else {
+        this.editableText = this.item.outputText || this.item.inputText || "";
+        if (this.item.audioId || this.item.category === "diarization") {
+          this.audioUrl = await this.downloadService.getAudioUrl(this.item);
+        }
+      }
+    } catch (e) {
+      this.errorMsg = e instanceof Error ? e.message : "Error cargando item";
+    } finally {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  }
+  async saveText() {
+    if (!this.item || this.isSaving)
+      return;
+    this.isSaving = true;
+    this.saveMsg = "";
+    this.cdr.detectChanges();
+    try {
+      const updated = __spreadProps(__spreadValues({}, this.item), {
+        outputText: this.editableText
+      });
+      await this.store.upsertItem(updated);
+      this.item = updated;
+      this.saveMsg = "\u2713 Guardado";
+      setTimeout(() => {
+        this.saveMsg = "";
+        this.cdr.detectChanges();
+      }, 2e3);
+    } catch (e) {
+      this.saveMsg = "Error al guardar";
+    } finally {
+      this.isSaving = false;
+      this.cdr.detectChanges();
+    }
+  }
+  async downloadText() {
+    if (!this.item)
+      return;
+    const content = this.editableText;
+    if (content) {
+      const blob = new Blob([content], { type: "text/plain" });
+      this.downloadService.downloadBlob(blob, `${this.item.name || "preview"}.txt`);
+    }
+  }
+  async downloadAudio() {
+    if (!this.item)
+      return;
+    await this.downloadService.downloadAudio(this.item);
+  }
+  async shareItem() {
+    if (!this.item)
+      return;
+    const result = await this.downloadService.share(this.item);
+    if (result === "unsupported") {
+      this.shareModalTitle = this.item.name || "Escriba";
+      this.shareModalText = this.editableText;
+      this.shareModalOpen = true;
+      this.cdr.detectChanges();
+    }
+  }
+  onShareAction() {
+    this.shareModalOpen = false;
+    this.cdr.detectChanges();
+  }
+  get displayName() {
+    if (!this.item)
+      return "";
+    const name = (this.item.name ?? "").trim();
+    if (name)
+      return name;
+    const src = (this.item.outputText ?? this.item.inputText ?? "").trim();
+    if (src)
+      return src.slice(0, 40) + (src.length > 40 ? "\u2026" : "");
+    return "Sin t\xEDtulo";
+  }
+  get hasAudio() {
+    return !!this.audioUrl;
+  }
+  back() {
+    this.router.navigate(["/history"]);
+  }
+  // --- Drawer ---
+  openProfile() {
+    this.mode = this.mode === "profile" ? "none" : "profile";
+    this.syncScrollLock();
+  }
+  openSettings() {
+    this.mode = this.mode === "settings" ? "none" : "settings";
+    this.syncScrollLock();
+  }
+  closeDrawer() {
+    this.mode = "none";
+    this.syncScrollLock();
+  }
+  syncScrollLock() {
+    if (this.drawerOpen)
+      this.lockScroll();
+    else
+      this.unlockScroll();
+  }
+  lockScroll() {
+    this.r2.setStyle(document.body, "overflow", "hidden");
+  }
+  unlockScroll() {
+    this.r2.removeStyle(document.body, "overflow");
+  }
+  static \u0275fac = function PreviewPage_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _PreviewPage)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PreviewPage, selectors: [["app-preview-page"]], decls: 17, vars: 11, consts: [["brandName", "Escriba", "subtitle", "Preview", 3, "profileClick", "settingsClick"], [1, "container", "main"], [1, "toolHeader"], ["type", "button", 1, "back", "btn-reset", "kbd-focus", 3, "click"], [1, "toolTitle"], [1, "title"], [1, "subtitle"], ["class", "panel", 4, "ngIf"], [4, "ngIf"], [3, "action", "open", "title", "text"], ["width", "420px", 3, "close", "open", "title"], [1, "panel"], [1, "panel__header"], [1, "hint"], [1, "hint", 2, "color", "#ff4d4f"], ["class", "save-status", 4, "ngIf"], [1, "box"], ["rows", "16", "placeholder", "Sin contenido de texto", 1, "text-editor", 3, "ngModelChange", "ngModel"], [1, "actions-bar"], ["type", "button", 1, "btn", "btn-primary", "btn-reset", "kbd-focus", 3, "click", "disabled"], ["type", "button", 1, "btn", "btn-reset", "kbd-focus", 3, "click"], ["controls", "", 1, "audio-player", 3, "src"], [1, "save-status"]], template: function PreviewPage_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "app-top-nav-bar", 0);
+      \u0275\u0275listener("profileClick", function PreviewPage_Template_app_top_nav_bar_profileClick_0_listener() {
+        return ctx.openProfile();
+      })("settingsClick", function PreviewPage_Template_app_top_nav_bar_settingsClick_0_listener() {
+        return ctx.openSettings();
+      });
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(1, "main", 1)(2, "div", 2)(3, "button", 3);
+      \u0275\u0275listener("click", function PreviewPage_Template_button_click_3_listener() {
+        return ctx.back();
+      });
+      \u0275\u0275text(4, "\u2190 Volver");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(5, "div", 4)(6, "div", 5);
+      \u0275\u0275text(7);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(8, "div", 6);
+      \u0275\u0275text(9, "Vista previa");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275template(10, PreviewPage_div_10_Template, 4, 0, "div", 7)(11, PreviewPage_div_11_Template, 4, 1, "div", 7)(12, PreviewPage_ng_container_12_Template, 16, 5, "ng-container", 8);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(13, "app-share-modal", 9);
+      \u0275\u0275listener("action", function PreviewPage_Template_app_share_modal_action_13_listener() {
+        return ctx.onShareAction();
+      });
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(14, "app-right-drawer", 10);
+      \u0275\u0275listener("close", function PreviewPage_Template_app_right_drawer_close_14_listener() {
+        return ctx.closeDrawer();
+      });
+      \u0275\u0275template(15, PreviewPage_app_profile_panel_15_Template, 1, 0, "app-profile-panel", 8)(16, PreviewPage_app_settings_panel_16_Template, 1, 0, "app-settings-panel", 8);
+      \u0275\u0275elementEnd();
+    }
+    if (rf & 2) {
+      \u0275\u0275advance(7);
+      \u0275\u0275textInterpolate(ctx.displayName);
+      \u0275\u0275advance(3);
+      \u0275\u0275property("ngIf", ctx.loading);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", !ctx.loading && ctx.errorMsg);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", !ctx.loading && ctx.item);
+      \u0275\u0275advance();
+      \u0275\u0275property("open", ctx.shareModalOpen)("title", ctx.shareModalTitle)("text", ctx.shareModalText);
+      \u0275\u0275advance();
+      \u0275\u0275property("open", ctx.drawerOpen)("title", ctx.drawerTitle);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", ctx.mode === "profile");
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", ctx.mode === "settings");
+    }
+  }, dependencies: [
+    CommonModule,
+    NgIf,
+    FormsModule,
+    DefaultValueAccessor,
+    NgControlStatus,
+    NgModel,
+    TopNavBarComponent,
+    RightDrawerComponent,
+    ProfilePanelComponent,
+    SettingsPanelComponent,
+    ShareModalComponent
+  ], styles: ["\n\n.main[_ngcontent-%COMP%] {\n  padding: 18px 0 40px;\n}\n.toolHeader[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle[_ngcontent-%COMP%]   .title[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle[_ngcontent-%COMP%]   .subtitle[_ngcontent-%COMP%] {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel[_ngcontent-%COMP%] {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.panel__header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n}\n.panel__header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.hint[_ngcontent-%COMP%] {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.save-status[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: rgba(120, 255, 120, .85);\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease;\n}\n.box[_ngcontent-%COMP%] {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.audio-player[_ngcontent-%COMP%] {\n  width: 100%;\n  border-radius: 10px;\n  margin-bottom: 12px;\n}\n.text-editor[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 200px;\n  padding: 14px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(0, 0, 0, .25);\n  color: var(--text);\n  font-family: inherit;\n  font-size: 14px;\n  line-height: 1.65;\n  resize: vertical;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease;\n}\n.text-editor[_ngcontent-%COMP%]:focus {\n  outline: none;\n  border-color: rgba(242, 230, 201, .35);\n}\n.text-editor[_ngcontent-%COMP%]::placeholder {\n  color: var(--muted);\n  opacity: .6;\n}\n.actions-bar[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-top: 12px;\n}\n.btn[_ngcontent-%COMP%] {\n  padding: 10px 14px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .04);\n  color: inherit;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.15s ease;\n}\n.btn[_ngcontent-%COMP%]:hover {\n  border-color: rgba(242, 230, 201, .28);\n  background: rgba(255, 255, 255, .08);\n}\n.btn-primary[_ngcontent-%COMP%] {\n  border-color: rgba(242, 230, 201, .30);\n  background: rgba(242, 230, 201, .08);\n  font-weight: 600;\n}\n.btn-primary[_ngcontent-%COMP%]:hover {\n  background: rgba(242, 230, 201, .14);\n}\n.btn[_ngcontent-%COMP%]:disabled {\n  opacity: .5;\n  cursor: default;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=preview.page.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PreviewPage, [{
+    type: Component,
+    args: [{ selector: "app-preview-page", standalone: true, imports: [
+      CommonModule,
+      FormsModule,
+      TopNavBarComponent,
+      RightDrawerComponent,
+      ProfilePanelComponent,
+      SettingsPanelComponent,
+      ShareModalComponent
+    ], template: `<app-top-nav-bar brandName="Escriba" subtitle="Preview" (profileClick)="openProfile()"\r
+    (settingsClick)="openSettings()"></app-top-nav-bar>\r
+\r
+<main class="container main">\r
+    <div class="toolHeader">\r
+        <button class="back btn-reset kbd-focus" type="button" (click)="back()">\u2190 Volver</button>\r
+\r
+        <div class="toolTitle">\r
+            <div class="title">{{ displayName }}</div>\r
+            <div class="subtitle">Vista previa</div>\r
+        </div>\r
+    </div>\r
+\r
+    <!-- Loading -->\r
+    <div class="panel" *ngIf="loading">\r
+        <div class="panel__header">\r
+            <div class="hint">Cargando\u2026</div>\r
+        </div>\r
+    </div>\r
+\r
+    <!-- Error -->\r
+    <div class="panel" *ngIf="!loading && errorMsg">\r
+        <div class="panel__header">\r
+            <div class="hint" style="color: #ff4d4f;">{{ errorMsg }}</div>\r
+        </div>\r
+    </div>\r
+\r
+    <!-- Content -->\r
+    <ng-container *ngIf="!loading && item">\r
+        <!-- Audio Section -->\r
+        <section class="panel" *ngIf="hasAudio">\r
+            <div class="panel__header">\r
+                <h2>Audio</h2>\r
+            </div>\r
+\r
+            <div class="box">\r
+                <audio controls [src]="audioUrl!" class="audio-player"></audio>\r
+\r
+                <div class="actions-bar">\r
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="downloadAudio()">\r
+                        \u{1F3B5} Descargar Audio\r
+                    </button>\r
+                </div>\r
+            </div>\r
+        </section>\r
+\r
+        <!-- Text Section -->\r
+        <section class="panel">\r
+            <div class="panel__header">\r
+                <h2>Transcripci\xF3n</h2>\r
+                <div class="save-status" *ngIf="saveMsg">{{ saveMsg }}</div>\r
+            </div>\r
+\r
+            <div class="box">\r
+                <textarea class="text-editor" [(ngModel)]="editableText" rows="16"\r
+                    placeholder="Sin contenido de texto"></textarea>\r
+\r
+                <div class="actions-bar">\r
+                    <button class="btn btn-primary btn-reset kbd-focus" type="button" (click)="saveText()"\r
+                        [disabled]="isSaving">\r
+                        {{ isSaving ? 'Guardando\u2026' : '\u{1F4BE} Guardar cambios' }}\r
+                    </button>\r
+\r
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="downloadText()">\r
+                        \u{1F4C4} Descargar Texto\r
+                    </button>\r
+\r
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="shareItem()">\r
+                        \u2934 Compartir\r
+                    </button>\r
+                </div>\r
+            </div>\r
+        </section>\r
+    </ng-container>\r
+</main>\r
+\r
+<!-- Share Modal -->\r
+<app-share-modal [open]="shareModalOpen" [title]="shareModalTitle" [text]="shareModalText" (action)="onShareAction()">\r
+</app-share-modal>\r
+\r
+<app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">\r
+    <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>\r
+    <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>\r
+</app-right-drawer>`, styles: ["/* src/app/history/pages/preview/preview.page.css */\n.main {\n  padding: 18px 0 40px;\n}\n.toolHeader {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin: 6px 0 16px;\n}\n.back {\n  padding: 10px 12px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .03);\n}\n.back:hover {\n  border-color: rgba(242, 230, 201, .28);\n}\n.toolTitle .title {\n  margin: 0;\n  font-size: 22px;\n}\n.toolTitle .subtitle {\n  margin: 2px 0 0;\n  color: var(--muted);\n}\n.panel {\n  border-radius: 16px;\n  border: 1px solid rgba(242, 230, 201, .12);\n  background: rgba(255, 255, 255, .02);\n  padding: 16px;\n  margin-bottom: 16px;\n}\n.panel__header h2 {\n  margin: 0;\n  font-size: 18px;\n}\n.panel__header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n.hint {\n  margin-top: 6px;\n  color: var(--muted);\n  font-size: 13px;\n}\n.save-status {\n  font-size: 13px;\n  color: rgba(120, 255, 120, .85);\n  animation: fadeIn 0.2s ease;\n}\n.box {\n  margin-top: 14px;\n  padding: 14px;\n  border-radius: 14px;\n  border: 1px solid rgba(242, 230, 201, .10);\n  background: rgba(0, 0, 0, .18);\n}\n.audio-player {\n  width: 100%;\n  border-radius: 10px;\n  margin-bottom: 12px;\n}\n.text-editor {\n  width: 100%;\n  min-height: 200px;\n  padding: 14px;\n  border-radius: 12px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(0, 0, 0, .25);\n  color: var(--text);\n  font-family: inherit;\n  font-size: 14px;\n  line-height: 1.65;\n  resize: vertical;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease;\n}\n.text-editor:focus {\n  outline: none;\n  border-color: rgba(242, 230, 201, .35);\n}\n.text-editor::placeholder {\n  color: var(--muted);\n  opacity: .6;\n}\n.actions-bar {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n  margin-top: 12px;\n}\n.btn {\n  padding: 10px 14px;\n  border-radius: 10px;\n  border: 1px solid rgba(242, 230, 201, .14);\n  background: rgba(255, 255, 255, .04);\n  color: inherit;\n  cursor: pointer;\n  font-size: 13px;\n  transition: all 0.15s ease;\n}\n.btn:hover {\n  border-color: rgba(242, 230, 201, .28);\n  background: rgba(255, 255, 255, .08);\n}\n.btn-primary {\n  border-color: rgba(242, 230, 201, .30);\n  background: rgba(242, 230, 201, .08);\n  font-weight: 600;\n}\n.btn-primary:hover {\n  background: rgba(242, 230, 201, .14);\n}\n.btn:disabled {\n  opacity: .5;\n  cursor: default;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n/*# sourceMappingURL=preview.page.css.map */\n"] }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PreviewPage, { className: "PreviewPage", filePath: "src/app/history/pages/preview/preview.page.ts", lineNumber: 33 });
 })();
 
 // src/app/app.routes.ts
@@ -54160,6 +55253,7 @@ var routes = [
   { path: "stt", component: SttComponent },
   { path: "tts", component: TtsComponent },
   { path: "history", component: HistoryPage },
+  { path: "preview/:id", component: PreviewPage },
   { path: "conversation", component: LobbyPage },
   { path: "**", redirectTo: "" }
 ];

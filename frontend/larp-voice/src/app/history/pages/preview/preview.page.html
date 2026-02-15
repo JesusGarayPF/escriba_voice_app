@@ -1,0 +1,84 @@
+<app-top-nav-bar brandName="Escriba" subtitle="Preview" (profileClick)="openProfile()"
+    (settingsClick)="openSettings()"></app-top-nav-bar>
+
+<main class="container main">
+    <div class="toolHeader">
+        <button class="back btn-reset kbd-focus" type="button" (click)="back()">← Volver</button>
+
+        <div class="toolTitle">
+            <div class="title">{{ displayName }}</div>
+            <div class="subtitle">Vista previa</div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="panel" *ngIf="loading">
+        <div class="panel__header">
+            <div class="hint">Cargando…</div>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div class="panel" *ngIf="!loading && errorMsg">
+        <div class="panel__header">
+            <div class="hint" style="color: #ff4d4f;">{{ errorMsg }}</div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <ng-container *ngIf="!loading && item">
+        <!-- Audio Section -->
+        <section class="panel" *ngIf="hasAudio">
+            <div class="panel__header">
+                <h2>Audio</h2>
+            </div>
+
+            <div class="box">
+                <audio controls [src]="audioUrl!" class="audio-player"></audio>
+
+                <div class="actions-bar">
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="downloadAudio()">
+                        🎵 Descargar Audio
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Text Section -->
+        <section class="panel">
+            <div class="panel__header">
+                <h2>Transcripción</h2>
+                <div class="save-status" *ngIf="saveMsg">{{ saveMsg }}</div>
+            </div>
+
+            <div class="box">
+                <textarea class="text-editor" [(ngModel)]="editableText" rows="16"
+                    placeholder="Sin contenido de texto"></textarea>
+
+                <div class="actions-bar">
+                    <button class="btn btn-primary btn-reset kbd-focus" type="button" (click)="saveText()"
+                        [disabled]="isSaving">
+                        {{ isSaving ? 'Guardando…' : '💾 Guardar cambios' }}
+                    </button>
+
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="downloadText()">
+                        📄 Descargar Texto
+                    </button>
+
+                    <button class="btn btn-reset kbd-focus" type="button" (click)="shareItem()">
+                        ⤴ Compartir
+                    </button>
+                </div>
+            </div>
+        </section>
+    </ng-container>
+</main>
+
+<!-- Share Modal -->
+<app-share-modal [open]="shareModalOpen" [title]="shareModalTitle" [text]="shareModalText" (action)="onShareAction()">
+</app-share-modal>
+
+<app-right-drawer [open]="drawerOpen" [title]="drawerTitle" width="420px" (close)="closeDrawer()">
+    <app-profile-panel *ngIf="mode === 'profile'"></app-profile-panel>
+    <app-settings-panel *ngIf="mode === 'settings'"></app-settings-panel>
+</app-right-drawer>

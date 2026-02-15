@@ -41,6 +41,7 @@ export class LobbyPage implements OnDestroy {
     isJoining = false;
     isProcessing = false;
     showSuccessModal = false;
+    transcriptionPrompt = ''; // Contexto para Whisper
 
     get drawerOpen() { return this.mode !== 'none'; }
     get drawerTitle() { return this.mode === 'profile' ? 'Perfil' : 'Configuración'; }
@@ -90,17 +91,27 @@ export class LobbyPage implements OnDestroy {
 
     async pasteCode() {
         console.log('Intento de pegar código...');
-        // Enfocar input para ayudar al navegador a entender la intención de usuario
         this.joinInput?.nativeElement.focus();
+        await this.readClipboardIntoCode();
+    }
 
+    /** Auto-paste al hacer focus en el input si está vacío */
+    async onCodeInputFocus() {
+        if (this.joinCode.length === 0) {
+            await this.readClipboardIntoCode();
+        }
+    }
+
+    private async readClipboardIntoCode() {
         try {
             const text = await navigator.clipboard.readText();
-            console.log('Texto leído del portapapeles:', text);
             if (text) {
-                this.joinCode = text.trim().substring(0, 6).toUpperCase();
+                const cleaned = text.trim().substring(0, 6).toUpperCase();
+                if (cleaned.length === 6) {
+                    this.joinCode = cleaned;
+                }
             }
         } catch (e) {
-            // Silencioso o log. El navegador ya suele mostrar prompt.
             console.warn('Permiso de portapapeles denegado o error:', e);
         }
     }
@@ -120,7 +131,7 @@ export class LobbyPage implements OnDestroy {
 
         this.isProcessing = true;
         try {
-            const success = await this.diarization.processSessionAndSave();
+            const success = await this.diarization.processSessionAndSave(this.transcriptionPrompt);
             if (success) {
                 this.showSuccessModal = true;
             } else {
@@ -129,6 +140,37 @@ export class LobbyPage implements OnDestroy {
         } catch (e) {
             console.error(e);
             alert('Error procesando sesión: ' + e);
+        } finally {
+            this.isProcessing = false;
+        }
+    }
+
+    triggerFileUpload() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/*';
+        input.onchange = (e: any) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.processFile(file);
+            }
+        };
+        input.click();
+    }
+
+    async processFile(file: File) {
+        this.isProcessing = true;
+        try {
+            console.log('Procesando archivo importado:', file.name);
+            const success = await this.diarization.processFileAndSave(file, this.transcriptionPrompt);
+            if (success) {
+                this.showSuccessModal = true;
+            } else {
+                alert('No se pudo procesar el archivo.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error procesando archivo: ' + e);
         } finally {
             this.isProcessing = false;
         }

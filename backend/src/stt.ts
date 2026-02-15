@@ -117,6 +117,8 @@ router.post('/', upload.single('audio'), async (req, res) => {
     console.log(`STT[${reqId}] ffmpegDone=${tFfmpegMs}ms wavBytes=${wavBytes} (${(wavBytes / (1024 * 1024)).toFixed(2)} MB)` + (wavDur ? ` wavDuration=${wavDur.toFixed(2)}s` : ''));
 
     // 2) Whisper sobre WAV convertido
+    const prompt = req.body.prompt ? String(req.body.prompt).trim() : '';
+
     const whisperArgs = [
       '-m', whisperModel,
       '-f', wavPath,
@@ -124,6 +126,12 @@ router.post('/', upload.single('audio'), async (req, res) => {
       outputJson ? '-oj' : '-otxt',
       '-of', txtBase
     ];
+
+    if (prompt) {
+      // whisper.cpp usa --prompt o -p
+      console.log(`STT[${reqId}] Adding prompt: "${prompt}"`);
+      whisperArgs.push('--prompt', prompt);
+    }
     const tWhisper0 = Date.now();
     console.log(`STT[${reqId}] whisper ${whisperArgs.join(' ')}`);
     await run(whisperBin, whisperArgs, uploadsDir);
