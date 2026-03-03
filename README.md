@@ -1,4 +1,4 @@
-# 🎙️ ESCRIBA — Asistente de Voz (Offline)
+# ESCRIBA — Asistente de Voz (Offline)
 
 **Escriba** es una solución integral de herramietnas de voz . A diferencia de otros asistentes, Escriba funciona de manera **100% offline**, garantizando privacidad, baja latencia y la posibilidad de usarse en entornos sin conexión a internet.
 
@@ -6,16 +6,16 @@ El sistema combina transcripción avanzada (STT), síntesis de voz natural (TTS)
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-- 🎙️ **Transcripción Offline**: Motor basado en `Whisper.cpp` para convertir voz en texto con alta precisión.
-- 🔊 **Síntesis de Voz Realista**: Integración con `Piper` para generar voces naturales en múltiples idiomas y personalidades.
-- 📴 **Privacidad Total**: No se envían datos a la nube; todo el procesamiento ocurre localmente.
-- ⚡ **Alto Rendimiento**: Optimizado para funcionar en hardware estándar mediante modelos cuantizados.
+-  **Transcripción Offline**: Motor basado en `Whisper.cpp` para convertir voz en texto con alta precisión.
+-  **Síntesis de Voz Realista**: Integración con `Piper` para generar voces naturales en múltiples idiomas y personalidades.
+-  **Privacidad Total**: No se envían datos a la nube; todo el procesamiento ocurre localmente.
+-  **Alto Rendimiento**: Optimizado para funcionar en hardware estándar mediante modelos cuantizados.
 
 ---
 
-## 🛠️ Stack Tecnológico
+##  Stack Tecnológico
 
 - **Frontend**: Angular (v20, Zoneless)
 - **Backend**: Node.js + Express + TypeScript
@@ -26,7 +26,7 @@ El sistema combina transcripción avanzada (STT), síntesis de voz natural (TTS)
 
 ---
 
-## 📁 Estructura de Directorios
+##  Estructura de Directorios
 
 ```text
 Escriba/
@@ -41,7 +41,7 @@ Escriba/
 
 ---
 
-## 🚀 Guía de Instalación
+##  Guía de Instalación
 
 Este proyecto requiere algunos componentes externos que no están incluidos en el repositorio debido a su tamaño o naturaleza binaria.
 
@@ -87,8 +87,6 @@ npm run start
 ```
 
 ---
-
-## 📝 Nota para Portfolio
 
 Este proyecto demuestra habilidades en:
 - Integración de herramientas de IA de bajo nivel en aplicaciones web.
