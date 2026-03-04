@@ -4,6 +4,12 @@
 
 El sistema combina transcripción (STT), síntesis de voz natural (TTS) y una arquitectura modular pensada para ser rápidamente migrada a contenerdores móvil o de escritorio.
 
+Este proyecto demuestra habilidades en:
+- Integración de herramientas de IA de bajo nivel en aplicaciones web.
+- Gestión de flujos de datos asíncronos y audio en tiempo real.
+- Diseño de arquitecturas desacopladas y eficientes.
+- Desarrollo frontend moderno con Angular Zoneless.
+
 ---
 
 ## Características Principales
@@ -85,11 +91,3 @@ cd frontend/larp-voice
 npm install
 npm run start
 ```
-
----
-
-Este proyecto demuestra habilidades en:
-- Integración de herramientas de IA de bajo nivel en aplicaciones web.
-- Gestión de flujos de datos asíncronos y audio en tiempo real.
-- Diseño de arquitecturas desacopladas y eficientes.
-- Desarrollo frontend moderno con Angular Zoneless.
