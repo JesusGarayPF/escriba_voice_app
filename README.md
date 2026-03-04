@@ -2,7 +2,7 @@
 
 **Escriba** es una solución integral de herramietnas de voz . A diferencia de otros asistentes, Escriba funciona de manera **100% offline**, garantizando privacidad, baja latencia y la posibilidad de usarse en entornos sin conexión a internet.
 
-El sistema combina transcripción avanzada (STT), síntesis de voz natural (TTS) y una arquitectura modular pensada para la inmersión narrativa.
+El sistema combina transcripción (STT), síntesis de voz natural (TTS) y una arquitectura modular pensada para ser rápidamente migrada a contenerdores móvil o de escritorio.
 
 ---
 
