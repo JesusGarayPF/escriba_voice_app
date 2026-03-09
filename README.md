@@ -1,6 +1,6 @@
 # ESCRIBA — Asistente de Voz (Offline)
 
-**Escriba** es una solución integral de herramietnas de voz . A diferencia de otros asistentes, Escriba funciona de manera **100% offline**, garantizando privacidad, baja latencia y la posibilidad de usarse en entornos sin conexión a internet.
+**Escriba** es una solución integral de herramientas de voz . A diferencia de otros asistentes, Escriba funciona de manera **100% offline**, garantizando privacidad, baja latencia y la posibilidad de usarse en entornos sin conexión a internet.
 
 El sistema combina transcripción (STT), síntesis de voz natural (TTS) y una arquitectura modular pensada para ser rápidamente migrada a contenerdores móvil o de escritorio.
 
@@ -31,6 +31,18 @@ Este proyecto demuestra habilidades en:
 - **Utilidades**: FFmpeg (conversión de audio)
 
 ---
+
+## Galería de Imágenes
+
+<img width="1916" height="937" alt="Escriba - Main" src="https://github.com/user-attachments/assets/c90ea2ff-12f8-4111-a71d-11e61ebd55ed" />
+<img width="1918" height="941" alt="<img width="1918" height="942" alt="Escriba STT" src="https://github.com/user-attachments/assets/a94bcd11-877d-4047-ae70-de09e2d16f0c" />
+<img width="1918" height="942" alt="Escriba STT" src="https://github.com/user-attachments/assets/79f4925e-b1b1-4a5d-97b2-c928d2e30876" />
+<img width="1918" height="936" alt="Escriba - Diarización I" src="https://github.com/user-attachments/assets/a220edff-7422-486d-8882-be3e1906e714" />
+<img width="1918" height="937" alt="Escriba - Diarización II" src="https://github.com/user-attachments/assets/690f03b5-4caf-48fa-96a5-f5dfb8bd87a5" />
+<img width="1918" height="941" alt="Escriba - Diarización III" src="https://github.com/user-attachments/assets/d2d08ce9-ee95-4db9-9117-f9fa9be86fdc" />
+<img width="1918" height="941" alt="Escriba - Guardado" src="https://github.com/user-attachments/assets/3ff7e469-8812-459a-8eab-07d07bde529d" />
+<img width="1918" height="940" alt="Escriba - Historial" src="https://github.com/user-attachments/assets/e0c87ee1-284d-4617-8ede-5dcbfb135bf8" />
+<img width="1898" height="938" alt="Escriba - Preview" src="https://github.com/user-attachments/assets/135ffca3-cef6-488b-ab0c-167bb90492a9" />
 
 ##  Estructura de Directorios
 
