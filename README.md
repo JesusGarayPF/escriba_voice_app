@@ -103,3 +103,10 @@ cd frontend/larp-voice
 npm install
 npm run start
 ```
+## Contacto
+
+Para cualquier consulta o contacto:
+
+**Jesús Garay Franco**  
+LinkedIn: https://www.linkedin.com/in/jesus-garay-franco/  
+Email: jesus.garay.f@gmail.com
